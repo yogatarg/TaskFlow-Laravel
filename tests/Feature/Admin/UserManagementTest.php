@@ -149,4 +149,25 @@ class UserManagementTest extends TestCase
         $this->assertSame(Role::User, $baru->role);
         $this->assertNull($baru->approver_id);
     }
+
+    public function test_halaman_kelola_user_dan_form_ubah_bisa_dirender(): void
+    {
+        $admin = User::factory()->admin()->create(['name' => 'Admin Utama']);
+        $approver = User::factory()->approver()->create(['name' => 'Budi Penyetuju']);
+        $user = User::factory()->create(['name' => 'Sari Biasa']);
+
+        $this->actingAs($admin)
+            ->get(route('admin.users.index'))
+            ->assertOk()
+            ->assertSee('Sari Biasa')
+            ->assertSee('Budi Penyetuju');
+
+        // Dropdown approver hanya berisi Approver/Admin, dan tidak memuat user biasa.
+        $this->actingAs($admin)
+            ->get(route('admin.users.edit', $user))
+            ->assertOk()
+            ->assertSee('Budi Penyetuju')
+            ->assertSee('Admin Utama')
+            ->assertDontSee('<option value="'.$user->id.'"', escape: false);
+    }
 }

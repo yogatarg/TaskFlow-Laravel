@@ -9,7 +9,7 @@
                 <form method="POST" action="{{ route('tasks.update', $task) }}" class="space-y-6">
                     @csrf
                     @method('PUT')
-                    @include('tasks._form')
+                    @include('tasks._form', ['task' => $task])
 
                     <div class="flex items-center gap-4">
                         <x-primary-button>Simpan</x-primary-button>

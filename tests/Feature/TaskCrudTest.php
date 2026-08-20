@@ -224,4 +224,51 @@ class TaskCrudTest extends TestCase
             ->assertSee($menunggu->title)
             ->assertDontSee($draft->title);
     }
+
+    public function test_halaman_buat_task_bisa_dirender(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->get(route('tasks.create'))
+            ->assertOk()
+            ->assertSee('Simpan sebagai Draft');
+    }
+
+    public function test_halaman_ubah_task_bisa_dirender_dan_terisi_data_lama(): void
+    {
+        $user = User::factory()->create();
+        $task = Task::factory()->create([
+            'created_by' => $user->id,
+            'title' => 'Judul lama',
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('tasks.edit', $task))
+            ->assertOk()
+            ->assertSee('Judul lama', escape: false);
+    }
+
+    public function test_halaman_detail_menampilkan_nama_approver(): void
+    {
+        $approver = User::factory()->approver()->create(['name' => 'Budi Penyetuju']);
+        $pemilik = User::factory()->bawahanDari($approver)->create();
+        $task = Task::factory()->create(['created_by' => $pemilik->id]);
+
+        $this->actingAs($pemilik)
+            ->get(route('tasks.show', $task))
+            ->assertOk()
+            ->assertSee('Budi Penyetuju');
+    }
+
+    public function test_detail_task_memperingatkan_kalau_pemilik_belum_punya_approver(): void
+    {
+        $pemilik = User::factory()->create(); // approver_id masih null
+        $task = Task::factory()->create(['created_by' => $pemilik->id]);
+
+        $this->actingAs($pemilik)
+            ->get(route('tasks.show', $task))
+            ->assertOk()
+            ->assertSee('Belum ada approver');
+    }
 }

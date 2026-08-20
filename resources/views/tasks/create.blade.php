@@ -13,7 +13,7 @@
 
                 <form method="POST" action="{{ route('tasks.store') }}" class="space-y-6">
                     @csrf
-                    @include('tasks._form')
+                    @include('tasks._form', ['task' => null])
 
                     <div class="flex items-center gap-4">
                         <x-primary-button>Simpan sebagai Draft</x-primary-button>

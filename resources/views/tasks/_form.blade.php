@@ -1,5 +1,14 @@
 {{--
     Bagian form yang dipakai bersama oleh halaman create dan edit.
+
+    Halaman create memanggilnya dengan ['task' => null], halaman edit dengan task yang
+    sedang diubah. Karena itu semua akses ke $task memakai operator nullsafe `?->`.
+
+    Catatan: jangan mengandalkan `$task->deadline?->format(...) ?? ''` untuk menutupi
+    $task yang tidak terdefinisi. Operator `??` hanya memaafkan variabel/properti yang
+    belum ada; begitu ada pemanggilan method di rantainya, PHP tetap melempar
+    "Undefined variable". Itulah kenapa $task selalu dikirim eksplisit.
+
     Tidak ada field `status` di sini: status hanya berpindah lewat state machine
     (tombol Ajukan / keputusan approver), bukan lewat form isian.
 --}}
@@ -7,14 +16,14 @@
 <div>
     <x-input-label for="title" value="Judul" />
     <x-text-input id="title" name="title" type="text" class="mt-1 block w-full"
-                  :value="old('title', $task->title ?? '')" required autofocus />
+                  :value="old('title', $task?->title)" required autofocus />
     <x-input-error class="mt-2" :messages="$errors->get('title')" />
 </div>
 
 <div>
     <x-input-label for="description" value="Deskripsi" />
     <textarea id="description" name="description" rows="5"
-              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">{{ old('description', $task->description ?? '') }}</textarea>
+              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">{{ old('description', $task?->description) }}</textarea>
     <x-input-error class="mt-2" :messages="$errors->get('description')" />
 </div>
 
@@ -24,7 +33,7 @@
         <select id="label" name="label"
                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
             @foreach ($daftarLabel as $opsi)
-                <option value="{{ $opsi->value }}" @selected(old('label', $task->label?->value ?? null) === $opsi->value)>
+                <option value="{{ $opsi->value }}" @selected(old('label', $task?->label?->value) === $opsi->value)>
                     {{ $opsi->label() }}
                 </option>
             @endforeach
@@ -38,7 +47,7 @@
         <select id="priority" name="priority"
                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
             @foreach ($daftarPrioritas as $opsi)
-                <option value="{{ $opsi->value }}" @selected(old('priority', $task->priority?->value ?? null) === $opsi->value)>
+                <option value="{{ $opsi->value }}" @selected(old('priority', $task?->priority?->value) === $opsi->value)>
                     {{ $opsi->label() }}
                 </option>
             @endforeach
@@ -50,6 +59,6 @@
 <div>
     <x-input-label for="deadline" value="Tenggat" />
     <x-text-input id="deadline" name="deadline" type="date" class="mt-1 block"
-                  :value="old('deadline', $task->deadline?->format('Y-m-d') ?? '')" />
+                  :value="old('deadline', $task?->deadline?->format('Y-m-d'))" />
     <x-input-error class="mt-2" :messages="$errors->get('deadline')" />
 </div>
