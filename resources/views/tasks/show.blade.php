@@ -53,6 +53,8 @@
                 </dl>
             </div>
 
+            @include('tasks._riwayat')
+
             @can('submit', $task)
                 <form method="POST" action="{{ route('tasks.submit', $task) }}"
                       class="rounded-lg border border-indigo-200 bg-indigo-50 p-4">

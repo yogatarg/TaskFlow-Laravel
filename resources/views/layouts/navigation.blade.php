@@ -30,6 +30,9 @@
                         <x-nav-link :href="route('admin.users.index')" :active="request()->routeIs('admin.users.*')">
                             Kelola User
                         </x-nav-link>
+                        <x-nav-link :href="route('admin.logs.index')" :active="request()->routeIs('admin.logs.*')">
+                            Log
+                        </x-nav-link>
                     @endif
                 </div>
             </div>
@@ -100,6 +103,9 @@
             @if (auth()->user()->isAdmin())
                 <x-responsive-nav-link :href="route('admin.users.index')" :active="request()->routeIs('admin.users.*')">
                     Kelola User
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('admin.logs.index')" :active="request()->routeIs('admin.logs.*')">
+                    Log
                 </x-responsive-nav-link>
             @endif
         </div>

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Enums\ApprovalAction;
 use App\Exceptions\TransisiTidakSah;
+use App\Models\ApprovalLog;
 use App\Models\Task;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -83,8 +84,22 @@ class ApprovalService
             $terkunci->status = $tujuan;
             $terkunci->save();
 
-            // TAHAP 4: satu baris ApprovalLog ditulis di sini, di dalam transaksi yang sama,
-            // memakai $aksi, $pelaku, dan $catatan yang sudah tersedia sebagai parameter.
+            /*
+             * Log ditulis di dalam transaksi yang SAMA dengan perubahan status.
+             *
+             * Kalau penulisan log gagal, perubahan status ikut dibatalkan -- dan itu
+             * memang yang diinginkan. Status yang berpindah tanpa jejak berarti riwayat
+             * approval-nya bohong: ada task yang tiba-tiba Approved tanpa ada yang
+             * tercatat menyetujuinya. Lebih baik aksinya gagal seluruhnya dan bisa
+             * diulang, daripada berhasil separuh dan menyisakan data yang menyesatkan.
+             */
+            ApprovalLog::create([
+                'task_id' => $terkunci->getKey(),
+                'actor_id' => $pelaku->getKey(),
+                'action' => $aksi,
+                'catatan' => $catatan,
+                'timestamp' => now(),
+            ]);
 
             // Segarkan objek yang dipegang pemanggil supaya tidak memakai status basi.
             $task->setRawAttributes($terkunci->getAttributes(), sync: true);

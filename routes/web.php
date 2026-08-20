@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\ApprovalLogController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\ApprovalController;
 use App\Http\Controllers\ProfileController;
@@ -57,6 +58,9 @@ Route::middleware(['auth', 'role:Admin'])
         Route::get('users', [UserController::class, 'index'])->name('users.index');
         Route::get('users/{user}/edit', [UserController::class, 'edit'])->name('users.edit');
         Route::put('users/{user}', [UserController::class, 'update'])->name('users.update');
+
+        // Hanya index: ApprovalLog append-only, tidak ada operasi lain yang sah.
+        Route::get('logs', [ApprovalLogController::class, 'index'])->name('logs.index');
     });
 
 require __DIR__.'/auth.php';

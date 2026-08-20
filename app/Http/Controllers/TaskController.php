@@ -82,7 +82,12 @@ class TaskController extends Controller implements HasMiddleware
 
     public function show(Task $task): View
     {
-        $task->load('creator.approver');
+        // Riwayat approval ikut dimuat sekalian, lengkap dengan pelakunya, supaya
+        // menampilkan sepuluh baris log tidak berubah jadi sebelas query (N+1).
+        $task->load([
+            'creator.approver',
+            'approvalLogs' => fn ($q) => $q->kronologis()->with('actor'),
+        ]);
 
         return view('tasks.show', compact('task'));
     }

@@ -61,6 +61,12 @@ class User extends Authenticatable
         return $this->hasMany(Task::class, 'created_by');
     }
 
+    /** Aksi approval yang pernah dilakukan user ini. */
+    public function approvalLogs(): HasMany
+    {
+        return $this->hasMany(ApprovalLog::class, 'actor_id');
+    }
+
     /** Atasan yang menyetujui task milik user ini. */
     public function approver(): BelongsTo
     {
