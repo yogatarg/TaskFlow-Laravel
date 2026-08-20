@@ -61,6 +61,44 @@ class TaskPolicy
             && $task->status->isEditable();
     }
 
+    /**
+     * Mengajukan task ke approver.
+     *
+     * Tiga syarat, dan ketiganya perlu:
+     *   1. Hanya pembuatnya yang boleh mengajukan. Admin sekalipun tidak -- mengajukan
+     *      berarti menyatakan "isi ini sudah siap dinilai", dan itu hak pemiliknya.
+     *   2. Statusnya memang boleh diajukan (Draft atau Revision Requested).
+     *   3. Pembuatnya harus punya approver. Tanpa itu task akan menggantung di
+     *      Pending Approval tanpa seorang pun yang bisa memutuskannya.
+     */
+    public function submit(User $user, Task $task): bool
+    {
+        return $task->created_by === $user->id
+            && $task->status->bisaDisubmit()
+            && $task->creator?->approver_id !== null;
+    }
+
+    /**
+     * Memutuskan task: menyetujui, menolak, atau meminta revisi.
+     *
+     * Yang berhak HANYA approver yang ditunjuk untuk pembuat task ini
+     * (users.approver_id milik pembuatnya). Admin tidak otomatis berhak.
+     *
+     * Alasannya: "akses penuh" milik Admin dalam spesifikasi adalah akses LIHAT.
+     * Kalau siapa pun yang berpangkat tinggi bisa memutuskan, catatan siapa-menyetujui-apa
+     * kehilangan maknanya. Kalau Admin memang perlu memutuskan, Admin cukup menjadikan
+     * dirinya approver lewat halaman Kelola User -- keputusannya jadi tercatat sebagai
+     * kewenangan yang memang diberikan, bukan diambil diam-diam.
+     */
+    public function decide(User $user, Task $task): bool
+    {
+        return $task->status->menungguKeputusan()
+            && $task->creator?->approver_id === $user->id
+            // Jaga-jaga: tidak ada yang boleh menyetujui task buatannya sendiri,
+            // meski datanya sempat rusak sehingga seseorang jadi approver dirinya.
+            && $task->created_by !== $user->id;
+    }
+
     private function pemilikAtauAdmin(User $user, Task $task): bool
     {
         return $task->created_by === $user->id || $user->isAdmin();

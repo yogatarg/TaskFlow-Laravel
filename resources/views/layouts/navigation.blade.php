@@ -20,6 +20,12 @@
                         Task
                     </x-nav-link>
 
+                    @if (auth()->user()->role->canApprove())
+                        <x-nav-link :href="route('approvals.index')" :active="request()->routeIs('approvals.*')">
+                            Approval
+                        </x-nav-link>
+                    @endif
+
                     @if (auth()->user()->isAdmin())
                         <x-nav-link :href="route('admin.users.index')" :active="request()->routeIs('admin.users.*')">
                             Kelola User
@@ -84,6 +90,12 @@
             <x-responsive-nav-link :href="route('tasks.index')" :active="request()->routeIs('tasks.*')">
                 Task
             </x-responsive-nav-link>
+
+            @if (auth()->user()->role->canApprove())
+                <x-responsive-nav-link :href="route('approvals.index')" :active="request()->routeIs('approvals.*')">
+                    Approval
+                </x-responsive-nav-link>
+            @endif
 
             @if (auth()->user()->isAdmin())
                 <x-responsive-nav-link :href="route('admin.users.index')" :active="request()->routeIs('admin.users.*')">

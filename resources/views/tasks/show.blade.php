@@ -53,6 +53,64 @@
                 </dl>
             </div>
 
+            @can('submit', $task)
+                <form method="POST" action="{{ route('tasks.submit', $task) }}"
+                      class="rounded-lg border border-indigo-200 bg-indigo-50 p-4">
+                    @csrf
+                    <p class="text-sm text-indigo-900">
+                        Task ini siap diajukan ke <strong>{{ $task->approver()->name }}</strong>.
+                        Setelah diajukan, isinya terkunci sampai ada keputusan.
+                    </p>
+                    <x-primary-button class="mt-3">Ajukan ke Approver</x-primary-button>
+                </form>
+            @endcan
+
+            @if ($task->created_by === auth()->id() && $task->status->bisaDisubmit() && ! $task->approver())
+                <div class="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+                    Task belum bisa diajukan karena Anda belum punya approver.
+                    Hubungi Admin untuk menetapkannya lebih dulu.
+                </div>
+            @endif
+
+            @can('decide', $task)
+                <form method="POST" class="space-y-3 rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
+                    @csrf
+
+                    <h3 class="font-semibold text-gray-900">Keputusan Anda</h3>
+                    <p class="text-sm text-gray-600">
+                        Diajukan oleh {{ $task->creator->name }}.
+                    </p>
+
+                    <div>
+                        <x-input-label for="catatan" value="Catatan" />
+                        <textarea id="catatan" name="catatan" rows="3"
+                                  class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                  placeholder="Wajib diisi kalau menolak atau meminta revisi.">{{ old('catatan') }}</textarea>
+                        <x-input-error class="mt-2" :messages="$errors->get('catatan')" />
+                    </div>
+
+                    {{--
+                        Satu form, tiga tombol. Atribut `formaction` menimpa action form
+                        hanya untuk tombol yang ditekan, jadi ketiganya bisa berbagi satu
+                        kotak catatan tanpa perlu JavaScript sama sekali.
+                    --}}
+                    <div class="flex flex-wrap gap-3">
+                        <button type="submit" formaction="{{ route('approvals.approve', $task) }}"
+                                class="rounded-md bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-500">
+                            Setujui
+                        </button>
+                        <button type="submit" formaction="{{ route('approvals.request-revision', $task) }}"
+                                class="rounded-md bg-orange-600 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-500">
+                            Minta Revisi
+                        </button>
+                        <button type="submit" formaction="{{ route('approvals.reject', $task) }}"
+                                class="rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-500">
+                            Tolak
+                        </button>
+                    </div>
+                </form>
+            @endcan
+
             <div class="flex flex-wrap items-center gap-3">
                 @can('update', $task)
                     <a href="{{ route('tasks.edit', $task) }}"
