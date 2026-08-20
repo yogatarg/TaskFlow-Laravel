@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\TaskController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -17,6 +18,12 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
+
+/*
+ * CRUD Task. Middleware `auth` dan seluruh pengecekan izin per-task dipasang
+ * di dalam TaskController::middleware(), bukan di sini.
+ */
+Route::resource('tasks', TaskController::class);
 
 /*
  * Area Admin. Middleware `role:Admin` berasal dari alias yang didaftarkan di

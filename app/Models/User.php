@@ -55,6 +55,12 @@ class User extends Authenticatable
         ];
     }
 
+    /** Task yang dibuat user ini. */
+    public function tasks(): HasMany
+    {
+        return $this->hasMany(Task::class, 'created_by');
+    }
+
     /** Atasan yang menyetujui task milik user ini. */
     public function approver(): BelongsTo
     {
