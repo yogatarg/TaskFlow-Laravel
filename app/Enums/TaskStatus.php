@@ -62,6 +62,35 @@ enum TaskStatus: string
     }
 
     /**
+     * Status yang bolanya masih ada di tangan PEMBUAT task.
+     *
+     * Inilah yang ditampilkan dashboard sebagai "In Progress". Istilah itu ada di
+     * spesifikasi dashboard tapi bukan salah satu status -- jadi ia harus dipetakan,
+     * dan pemetaannya ditaruh di sini supaya definisinya tidak tersebar sebagai
+     * whereIn di beberapa controller yang lama-lama bisa berbeda isinya.
+     *
+     * Pending Approval sengaja TIDAK termasuk: ia sudah punya kotak sendiri di
+     * dashboard, dan bolanya ada di tangan approver, bukan pembuat task.
+     *
+     * @return list<self>
+     */
+    public static function diTanganPembuat(): array
+    {
+        return [self::Draft, self::RevisionRequested];
+    }
+
+    /**
+     * @return list<self> status yang tidak akan berubah lagi
+     */
+    public static function terminal(): array
+    {
+        return array_values(array_filter(
+            self::cases(),
+            fn (self $status) => $status->isTerminal(),
+        ));
+    }
+
+    /**
      * @return list<self> status yang boleh dituju dari status ini
      */
     public function transisiYangDiizinkan(): array
