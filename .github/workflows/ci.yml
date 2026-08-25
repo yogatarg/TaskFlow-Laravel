@@ -1,0 +1,93 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Batalkan run lama kalau ada push baru di branch yang sama --
+# tidak ada gunanya menunggu hasil dari kode yang sudah usang.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    name: Test (PHP ${{ matrix.php }})
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        # 8.4 adalah versi minimum di composer.json, 8.5 dipakai di mesin
+        # pengembangan. Keduanya diuji supaya proyek tidak diam-diam bergantung
+        # pada fitur yang belum ada di versi minimumnya.
+        php: ['8.4', '8.5']
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Siapkan PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          # Test berjalan di SQLite in-memory (lihat phpunit.xml), bukan PostgreSQL,
+          # jadi tidak perlu layanan database sama sekali.
+          extensions: mbstring, pdo_sqlite, sqlite3
+          coverage: none
+
+      - name: Siapkan Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Cache dependensi Composer
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: composer-${{ matrix.php }}-${{ hashFiles('composer.lock') }}
+          restore-keys: composer-${{ matrix.php }}-
+
+      - name: Pasang dependensi PHP
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Siapkan berkas .env
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      - name: Pasang dependensi frontend
+        run: npm ci
+
+      - name: Build aset
+        # Wajib: feature test merender Blade, dan direktif @vite gagal kalau
+        # manifest hasil build belum ada. Sekalian memastikan build tidak rusak.
+        run: npm run build
+
+      - name: Jalankan test
+        run: php artisan test
+
+  style:
+    name: Gaya penulisan (Pint)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Siapkan PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          coverage: none
+
+      - name: Pasang dependensi PHP
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Periksa gaya penulisan
+        # --test hanya memeriksa, tidak mengubah berkas. Perbaiki secara lokal
+        # dengan menjalankan `./vendor/bin/pint`.
+        run: ./vendor/bin/pint --test

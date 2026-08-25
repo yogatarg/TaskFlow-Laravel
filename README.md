@@ -4,8 +4,9 @@ Sistem manajemen task organisasi dengan alur approval bertingkat. Dibangun sebag
 portofolio dengan fokus pada **kedalaman pemahaman, bukan luasnya fitur** — setiap keputusan
 desain di sini diambil sadar dan bisa dijelaskan alasannya.
 
+[![CI](https://github.com/yogatarg/TaskFlow-Laravel/actions/workflows/ci.yml/badge.svg)](https://github.com/yogatarg/TaskFlow-Laravel/actions/workflows/ci.yml)
 ![Laravel](https://img.shields.io/badge/Laravel-12-FF2D20?logo=laravel&logoColor=white)
-![PHP](https://img.shields.io/badge/PHP-8.2%2B-777BB4?logo=php&logoColor=white)
+![PHP](https://img.shields.io/badge/PHP-8.4%2B-777BB4?logo=php&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Neon-4169E1?logo=postgresql&logoColor=white)
 
 ---
@@ -117,7 +118,7 @@ locking; sudah diuji manual terhadap PostgreSQL.
 
 ## Stack
 
-- **Laravel 12** (PHP 8.2+)
+- **Laravel 12** (PHP 8.4+)
 - **Blade + Controller murni** — tanpa Livewire/Inertia/React
 - **Laravel Breeze** (stack Blade) untuk autentikasi
 - **PostgreSQL** (Neon) via Eloquent
@@ -128,7 +129,7 @@ locking; sudah diuji manual terhadap PostgreSQL.
 
 ### Prasyarat
 
-- PHP 8.2+ dengan ekstensi **`pdo_pgsql`** dan **`pgsql`** aktif
+- PHP 8.4+ dengan ekstensi **`pdo_pgsql`** dan **`pgsql`** aktif
 - Composer dan Node.js
 - Sebuah database PostgreSQL (proyek ini memakai [Neon](https://neon.tech), tapi PostgreSQL
   lokal juga bisa)
@@ -202,6 +203,13 @@ php artisan test
 ```
 
 117 test berjalan di SQLite in-memory, jadi tidak menyentuh database pengembangan Anda.
+Seluruhnya dijalankan otomatis di GitHub Actions pada setiap push dan pull request ke `main`
+— di PHP 8.4 dan 8.5 — bersama pemeriksaan gaya penulisan Laravel Pint.
+
+```bash
+./vendor/bin/pint          # rapikan gaya penulisan
+./vendor/bin/pint --test   # hanya periksa, sama seperti yang dijalankan CI
+```
 
 | Berkas | Test | Cakupan |
 |---|---:|---|
