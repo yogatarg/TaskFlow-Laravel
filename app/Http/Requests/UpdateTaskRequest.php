@@ -9,6 +9,4 @@ namespace App\Http\Requests;
  * ketika nanti aturan simpan dan aturan ubah mulai berbeda (misal tenggat tidak boleh
  * dimundurkan setelah pernah diajukan), tempat menaruhnya sudah ada.
  */
-class UpdateTaskRequest extends StoreTaskRequest
-{
-}
+class UpdateTaskRequest extends StoreTaskRequest {}
