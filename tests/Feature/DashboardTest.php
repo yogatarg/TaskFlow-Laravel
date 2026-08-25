@@ -18,6 +18,18 @@ class DashboardTest extends TestCase
         $this->get(route('dashboard'))->assertRedirect(route('login'));
     }
 
+    public function test_halaman_depan_mengarahkan_ke_dashboard(): void
+    {
+        // TaskFlow aplikasi internal: tidak ada halaman publik di '/'.
+        $this->get('/')->assertRedirect('/dashboard');
+    }
+
+    public function test_tamu_yang_membuka_halaman_depan_berakhir_di_login(): void
+    {
+        $this->get('/')->assertRedirect('/dashboard');
+        $this->get('/dashboard')->assertRedirect(route('login'));
+    }
+
     // ------------------------------------------------------------------ User
 
     public function test_user_melihat_dashboard_user(): void

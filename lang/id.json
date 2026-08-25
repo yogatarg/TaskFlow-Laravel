@@ -1,0 +1,41 @@
+{
+    "Name": "Nama",
+    "Email": "Email",
+    "Password": "Kata sandi",
+    "Confirm": "Konfirmasi",
+    "Confirm Password": "Konfirmasi kata sandi",
+    "Current Password": "Kata sandi saat ini",
+    "New Password": "Kata sandi baru",
+    "Remember me": "Ingat saya",
+    "Log in": "Masuk",
+    "Log Out": "Keluar",
+    "Register": "Daftar",
+    "Already registered?": "Sudah punya akun?",
+    "Forgot your password?": "Lupa kata sandi?",
+    "Email Password Reset Link": "Kirim Tautan Atur Ulang",
+    "Reset Password": "Atur Ulang Kata Sandi",
+    "Forgot your password? No problem. Just let us know your email address and we will email you a password reset link that will allow you to choose a new one.": "Lupa kata sandi? Tidak masalah. Beri tahu alamat email Anda, dan kami akan mengirimkan tautan untuk membuat kata sandi baru.",
+    "This is a secure area of the application. Please confirm your password before continuing.": "Ini area terbatas. Masukkan kembali kata sandi Anda sebelum melanjutkan.",
+
+    "Dashboard": "Dashboard",
+    "Profile": "Profil",
+    "Profile Information": "Informasi Profil",
+    "Update your account's profile information and email address.": "Perbarui nama dan alamat email akun Anda.",
+    "Save": "Simpan",
+    "Saved.": "Tersimpan.",
+    "Cancel": "Batal",
+
+    "Update Password": "Ubah Kata Sandi",
+    "Ensure your account is using a long, random password to stay secure.": "Pastikan akun Anda memakai kata sandi yang panjang dan acak agar tetap aman.",
+
+    "Delete Account": "Hapus Akun",
+    "Are you sure you want to delete your account?": "Yakin ingin menghapus akun Anda?",
+    "Once your account is deleted, all of its resources and data will be permanently deleted. Before deleting your account, please download any data or information that you wish to retain.": "Setelah akun dihapus, seluruh data yang menyertainya ikut terhapus permanen. Simpan dulu data yang ingin Anda pertahankan sebelum melanjutkan. Catatan: akun yang pernah memproses approval atau masih menjadi approver bagi user lain tidak bisa dihapus, demi menjaga riwayat approval tetap bisa ditelusuri.",
+    "Once your account is deleted, all of its resources and data will be permanently deleted. Please enter your password to confirm you would like to permanently delete your account.": "Setelah akun dihapus, seluruh data yang menyertainya ikut terhapus permanen. Masukkan kata sandi Anda untuk memastikan Anda benar-benar ingin menghapusnya.",
+
+    "Your email address is unverified.": "Alamat email Anda belum terverifikasi.",
+    "Click here to re-send the verification email.": "Klik di sini untuk mengirim ulang email verifikasi.",
+    "A new verification link has been sent to your email address.": "Tautan verifikasi baru telah dikirim ke alamat email Anda.",
+    "A new verification link has been sent to the email address you provided during registration.": "Tautan verifikasi baru telah dikirim ke alamat email yang Anda daftarkan.",
+    "Resend Verification Email": "Kirim Ulang Email Verifikasi"
+}

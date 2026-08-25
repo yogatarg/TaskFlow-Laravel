@@ -9,9 +9,13 @@ use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TaskSubmissionController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+/*
+ * Halaman sambutan bawaan Laravel tidak dipakai. TaskFlow adalah aplikasi internal:
+ * tidak ada halaman publik yang perlu ditampilkan ke pengunjung anonim.
+ *
+ * Sudah login -> langsung ke dashboard. Belum -> ke halaman login.
+ */
+Route::redirect('/', '/dashboard');
 
 // Middleware auth+verified dipasang di DashboardController::middleware().
 Route::get('/dashboard', DashboardController::class)->name('dashboard');
