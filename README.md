@@ -123,7 +123,7 @@ locking; sudah diuji manual terhadap PostgreSQL.
 - **Laravel Breeze** (stack Blade) untuk autentikasi
 - **PostgreSQL** (Neon) via Eloquent
 - **Tailwind CSS + Vite**
-- **PHPUnit** — 117 test
+- **PHPUnit** — 130 test
 
 ## Menjalankan secara lokal
 
@@ -202,7 +202,7 @@ Perhatikan bahwa Approver pun punya atasan: task miliknya sendiri diajukan ke Ad
 php artisan test
 ```
 
-117 test berjalan di SQLite in-memory, jadi tidak menyentuh database pengembangan Anda.
+130 test berjalan di SQLite in-memory, jadi tidak menyentuh database pengembangan Anda.
 Seluruhnya dijalankan otomatis di GitHub Actions pada setiap push dan pull request ke `main`
 — di PHP 8.4 dan 8.5 — bersama pemeriksaan gaya penulisan Laravel Pint.
 
@@ -218,6 +218,7 @@ Seluruhnya dijalankan otomatis di GitHub Actions pada setiap push dan pull reque
 | `ApprovalLogTest` | 17 | Pencatatan, append-only, integritas transaksi |
 | `DashboardTest` | 16 | Hitungan dan pemetaan status per peran |
 | `Admin/UserManagementTest` | 12 | Pengelolaan role dan approver |
+| `Unit/TaskStatusTest` | 13 | State machine sebagai logika murni, tanpa database |
 
 Sisanya bawaan Breeze (autentikasi dan profil).
 
