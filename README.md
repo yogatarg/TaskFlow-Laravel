@@ -1,59 +1,264 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# TaskFlow
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Sistem manajemen task organisasi dengan alur approval bertingkat. Dibangun sebagai proyek
+portofolio dengan fokus pada **kedalaman pemahaman, bukan luasnya fitur** — setiap keputusan
+desain di sini diambil sadar dan bisa dijelaskan alasannya.
 
-## About Laravel
+![Laravel](https://img.shields.io/badge/Laravel-12-FF2D20?logo=laravel&logoColor=white)
+![PHP](https://img.shields.io/badge/PHP-8.2%2B-777BB4?logo=php&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Neon-4169E1?logo=postgresql&logoColor=white)
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+---
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Tentang
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+Seorang pegawai membuat task, mengajukannya ke atasannya, lalu atasan itu menyetujui,
+menolak, atau meminta revisi. Setiap keputusan tercatat permanen. Sesederhana itu — dan
+justru karena sederhana, seluruh perhatian bisa diarahkan ke hal-hal yang biasanya
+dilewati: siapa boleh melakukan apa, kapan data boleh berubah, dan bagaimana memastikan
+riwayatnya tidak bisa dibengkokkan.
 
-## Learning Laravel
+Antarmukanya memakai **Blade dan Controller murni** — tanpa Livewire, Inertia, atau React.
+Ini pilihan sadar: lapisan abstraksi tambahan menyamarkan fundamental Laravel yang justru
+ingin dipahami di proyek ini.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+## Peran dan wewenang
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+| Peran | Wewenang |
+|---|---|
+| **User** | Membuat, mengelola, dan mengajukan task miliknya sendiri |
+| **Approver** | Semua wewenang User, ditambah menyetujui/menolak/meminta revisi task yang diajukan **kepadanya** |
+| **Admin** | Mengelola user dan role, menetapkan approver tiap user, melihat seluruh task dan log |
 
-## Laravel Sponsors
+Approver ditentukan **per user**, bukan per task. Task yang dibuat Sari otomatis diajukan
+ke approver Sari. Kalau Admin mengganti approver Sari, task lama tidak perlu disentuh —
+dan catatan siapa yang dulu memproses tetap utuh di log.
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+## Alur approval
 
-### Premium Partners
+```mermaid
+stateDiagram-v2
+    [*] --> Draft
+    Draft --> PendingApproval: submit
+    PendingApproval --> Approved: approve
+    PendingApproval --> Rejected: reject
+    PendingApproval --> RevisionRequested: request revision
+    RevisionRequested --> PendingApproval: perbaiki lalu submit lagi
+    Approved --> [*]
+    Rejected --> [*]
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+    PendingApproval: Pending Approval
+    RevisionRequested: Revision Requested
+```
 
-## Contributing
+Aturan yang menyertainya:
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+- **`Approved` dan `Rejected` bersifat final.** Task yang ditolak dan ingin diajukan ulang
+  dibuat sebagai task baru, bukan dihidupkan kembali.
+- **Task yang sedang `Pending Approval` tidak bisa diedit.** Approver sedang menilai isinya,
+  jadi isinya dibekukan. Perbaikan dilakukan setelah approver mengembalikannya lewat
+  *request revision*.
+- **Menolak dan meminta revisi wajib menyertakan catatan.** Tanpa itu pembuat task tidak
+  tahu apa yang harus diperbaiki.
 
-## Code of Conduct
+## Keputusan desain
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Bagian ini yang paling layak dibaca kalau Anda menilai proyek ini.
 
-## Security Vulnerabilities
+### State machine tinggal di satu tempat
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Aturan "boleh pindah ke status mana" ada di `app/Enums/TaskStatus.php`, bukan tersebar di
+controller. Policy dan `ApprovalService` sama-sama bertanya ke sana, sehingga keduanya
+mustahil berbeda pendapat.
 
-## License
+### Tiga lapis penjagaan yang tugasnya berbeda
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Ketiganya sering dikira saling menggantikan, padahal masing-masing menutup celah yang
+berbeda:
+
+| Lapis | Menjawab | Contoh |
+|---|---|---|
+| Middleware | "Role apa yang boleh masuk halaman ini?" | `role:Admin` pada grup route admin |
+| Policy | "User ini boleh apa terhadap **task itu**?" | `TaskPolicy::update()` |
+| `$fillable` | "Field apa yang boleh datang dari input?" | `status` dan `created_by` diblokir |
+
+`role:Admin` tidak bisa mencegah Admin A mengubah task Admin B. `TaskPolicy` tidak bisa
+mencegah `status=Approved` diselipkan ke form. Karena itu ketiganya dipakai bersama, dan
+masing-masing punya test yang membuktikannya.
+
+### Log dan perubahan status tidak bisa terpisah
+
+`ApprovalService` menulis `ApprovalLog` di dalam transaksi yang **sama** dengan perubahan
+status. Kalau penulisan log gagal, perubahan status ikut dibatalkan. Alternatifnya adalah
+task yang tiba-tiba `Approved` tanpa ada seorang pun tercatat menyetujuinya — dan riwayat
+yang bohong lebih berbahaya daripada aksi yang gagal lalu diulang.
+
+Ada test yang menjatuhkan tabel log lalu memastikan status benar-benar ter-*rollback*.
+
+### Log bersifat append-only, dan itu ditegakkan
+
+Tidak ada route, controller, atau form yang bisa mengubah maupun menghapus `ApprovalLog`.
+Selain itu model memasang penjaga pada event `updating` dan `deleting` yang melempar
+exception. User yang pernah memproses approval juga tidak bisa menghapus akunnya —
+`approval_logs.actor_id` memakai `restrictOnDelete`, dan `ProfileController` memberi pesan
+yang jelas alih-alih membiarkannya jadi error 500.
+
+Log yang bisa dirapikan belakangan bukan log.
+
+### Anti klik-ganda pada keputusan approval
+
+Perpindahan status memakai `lockForUpdate()` disertai pembacaan ulang status di dalam
+transaksi. Tanpa itu, dua request yang datang hampir bersamaan — misalnya tombol "Setujui"
+ditekan dua kali — bisa sama-sama lolos pemeriksaan dan sama-sama menulis, meninggalkan dua
+baris log untuk satu keputusan.
+
+Perilaku ini tidak bisa diverifikasi lewat test otomatis karena SQLite mengabaikan row
+locking; sudah diuji manual terhadap PostgreSQL.
+
+## Stack
+
+- **Laravel 12** (PHP 8.2+)
+- **Blade + Controller murni** — tanpa Livewire/Inertia/React
+- **Laravel Breeze** (stack Blade) untuk autentikasi
+- **PostgreSQL** (Neon) via Eloquent
+- **Tailwind CSS + Vite**
+- **PHPUnit** — 117 test
+
+## Menjalankan secara lokal
+
+### Prasyarat
+
+- PHP 8.2+ dengan ekstensi **`pdo_pgsql`** dan **`pgsql`** aktif
+- Composer dan Node.js
+- Sebuah database PostgreSQL (proyek ini memakai [Neon](https://neon.tech), tapi PostgreSQL
+  lokal juga bisa)
+
+> Di Laragon/XAMPP, dua ekstensi PostgreSQL biasanya masih dinonaktifkan. Hapus tanda `;`
+> pada baris `extension=pdo_pgsql` dan `extension=pgsql` di `php.ini`, lalu restart.
+> Periksa dengan `php -m | grep pgsql`.
+
+### Langkah
+
+```bash
+git clone https://github.com/yogatarg/TaskFlow-Laravel.git
+cd TaskFlow-Laravel
+
+composer install
+npm install
+
+cp .env.example .env
+php artisan key:generate
+```
+
+Isi `DB_URL` di `.env` dengan connection string PostgreSQL Anda:
+
+```dotenv
+DB_CONNECTION=pgsql
+DB_URL=postgresql://user:password@host/namadb
+DB_SSLMODE=require
+```
+
+> **Pengguna Neon:** pakai endpoint **direct**, yaitu host **tanpa** `-pooler`. Endpoint
+> pooler memakai PgBouncer dalam *transaction mode*, sementara Laravel membungkus tiap
+> migration PostgreSQL dalam satu transaksi — akibatnya migrasi gagal dengan
+> `SQLSTATE 25P02`.
+
+Lalu:
+
+```bash
+php artisan migrate --seed
+npm run dev          # terminal 1
+php artisan serve    # terminal 2
+```
+
+Buka http://localhost:8000.
+
+### Akun demo
+
+Seeder membuat empat akun. Password semuanya `password`.
+
+| Email | Peran | Approver-nya |
+|---|---|---|
+| `admin@taskflow.test` | Admin | — |
+| `approver@taskflow.test` | Approver | Admin TaskFlow |
+| `sari@taskflow.test` | User | Budi Approver |
+| `rina@taskflow.test` | User | Budi Approver |
+
+Perhatikan bahwa Approver pun punya atasan: task miliknya sendiri diajukan ke Admin.
+
+### Mencoba alurnya
+
+1. Login sebagai **Sari** → buat task → buka detailnya → **Ajukan ke Approver**
+2. Login sebagai **Budi** → menu **Approval** → tinjau → coba **Minta Revisi** tanpa
+   mengisi catatan (harus ditolak), lalu isi catatannya
+3. Login sebagai **Sari** lagi → task bisa diedit kembali → ajukan ulang
+4. Login sebagai **Budi** → **Setujui**. Task terkunci sejak saat itu.
+5. Login sebagai **Admin** → menu **Log** untuk melihat seluruh jejaknya
+
+## Pengujian
+
+```bash
+php artisan test
+```
+
+117 test berjalan di SQLite in-memory, jadi tidak menyentuh database pengembangan Anda.
+
+| Berkas | Test | Cakupan |
+|---|---:|---|
+| `TaskCrudTest` | 22 | CRUD, kepemilikan, penguncian per status |
+| `ApprovalFlowTest` | 25 | Pengajuan, keputusan, siklus revisi penuh |
+| `ApprovalLogTest` | 17 | Pencatatan, append-only, integritas transaksi |
+| `DashboardTest` | 16 | Hitungan dan pemetaan status per peran |
+| `Admin/UserManagementTest` | 12 | Pengelolaan role dan approver |
+
+Sisanya bawaan Breeze (autentikasi dan profil).
+
+## Struktur proyek
+
+```
+app/
+  Enums/            Role, TaskStatus (state machine), TaskLabel,
+                    TaskPriority, ApprovalAction
+  Models/           User, Task, ApprovalLog
+  Policies/         TaskPolicy — izin per objek
+  Services/         ApprovalService — satu-satunya pintu perpindahan status
+  Exceptions/       TransisiTidakSah
+  Http/
+    Controllers/    Dashboard, Task, TaskSubmission, Approval,
+                    Admin\User, Admin\ApprovalLog
+    Requests/       StoreTask, UpdateTask, ApprovalDecision, UpdateUser
+    Middleware/     EnsureUserHasRole — izin per role
+
+resources/views/    dashboard/, tasks/, approvals/, admin/, components/
+database/           migrations, factories, seeders
+docs/               catatan teknis
+tests/Feature/      117 test
+```
+
+## Dokumentasi
+
+- **[`CLAUDE.md`](CLAUDE.md)** — spesifikasi teknis: skema data, state machine, dan urutan
+  pengembangan yang diikuti
+- **[`docs/01-crud-task.md`](docs/01-crud-task.md)** — pembedahan satu request `PUT /tasks/5`
+  dari form di browser sampai flash message: urutan middleware, route model binding,
+  Form Request, `$fillable`, cast enum, dan pola POST/Redirect/GET
+
+## Status pengembangan
+
+Kelima tahap dalam spesifikasi sudah selesai, dikerjakan berurutan dan masing-masing menjadi
+satu commit tersendiri:
+
+- [x] Authentication & Role
+- [x] CRUD Task
+- [x] Approval Flow
+- [x] Activity Log
+- [x] Dashboard per peran
+
+Yang belum ada dan bukan bagian dari spesifikasi: notifikasi ke approver saat ada task
+masuk, ekspor laporan, dan approval berjenjang lebih dari satu tingkat.
+
+## Catatan
+
+Proyek ini sempat dirintis dengan Next.js + Prisma + NextAuth sebelum dibangun ulang dengan
+Laravel. Alasan pindah: fokus belajar saat itu adalah mendalami Laravel, dan lapisan React
+justru mengaburkan fundamental yang ingin dipahami.
