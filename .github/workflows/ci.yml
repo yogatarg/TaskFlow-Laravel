@@ -111,6 +111,38 @@ jobs:
           # bisa dibangun, karena kalau Dockerfile rusak yang menemukannya adalah
           # Render saat deploy -- dan saat itu aplikasinya sudah telanjur mati.
           push: false
-          load: false
+          load: true
+          tags: taskflow:ci
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Jalankan kontainer dan pastikan aplikasi menyala
+        run: |
+          # Build saja tidak membuktikan apa-apa soal runtime: kesalahan di
+          # entrypoint.sh atau path Caddyfile baru muncul saat dijalankan.
+          # Di sini kontainer benar-benar dinyalakan memakai SQLite sementara,
+          # lalu health check Laravel diketuk sampai menjawab.
+          touch /tmp/ci.sqlite && chmod 666 /tmp/ci.sqlite
+
+          docker run -d --name taskflow-ci -p 8080:8080             -v /tmp/ci.sqlite:/tmp/ci.sqlite             -e PORT=8080             -e APP_KEY="base64:$(head -c 32 /dev/urandom | base64)"             -e APP_ENV=production             -e APP_DEBUG=false             -e APP_URL=http://localhost:8080             -e DB_CONNECTION=sqlite             -e DB_DATABASE=/tmp/ci.sqlite             -e DB_URL=             -e SESSION_DRIVER=database             -e CACHE_STORE=database             -e QUEUE_CONNECTION=sync             -e LOG_CHANNEL=stderr             taskflow:ci
+
+          for i in $(seq 1 30); do
+            if curl -fsS http://localhost:8080/up > /dev/null 2>&1; then
+              echo "Health check menjawab."
+
+              # Halaman depan harus mengalihkan tamu ke /login, bukan menampilkan
+              # error 500 -- ini memastikan Laravel benar-benar bisa boot penuh,
+              # bukan sekadar melayani route health check yang tidak menyentuh apa pun.
+              kode=$(curl -s -o /dev/null -w '%{http_code}' -L http://localhost:8080/)
+              echo "GET / -> HTTP $kode"
+              [ "$kode" = "200" ] || { docker logs taskflow-ci; exit 1; }
+
+              docker rm -f taskflow-ci > /dev/null
+              exit 0
+            fi
+            sleep 2
+          done
+
+          echo "Kontainer tidak pernah siap dalam 60 detik. Log:"
+          docker logs taskflow-ci
+          exit 1
