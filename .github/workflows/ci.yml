@@ -107,42 +107,65 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          # Tidak di-push ke mana pun. Tujuannya hanya memastikan image benar-benar
-          # bisa dibangun, karena kalau Dockerfile rusak yang menemukannya adalah
-          # Render saat deploy -- dan saat itu aplikasinya sudah telanjur mati.
+          # Tidak di-push ke mana pun. Tujuannya memastikan image benar-benar bisa
+          # dibangun, karena kalau Dockerfile rusak yang menemukannya adalah Render
+          # saat deploy -- dan saat itu aplikasinya sudah telanjur mati.
           push: false
           load: true
           tags: taskflow:ci
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Jalankan kontainer dan pastikan aplikasi menyala
+      - name: Nyalakan kontainer
+        # Build saja tidak membuktikan apa-apa soal runtime: kesalahan di
+        # docker/entrypoint.sh, path Caddyfile, atau pengikatan port baru muncul
+        # saat kontainer dijalankan.
+        #
+        # Berkas SQLite dibuat DI DALAM kontainer, bukan di-mount dari host --
+        # berkas hasil bind-mount tidak bisa ditulis oleh proses di dalamnya
+        # ("attempt to write a readonly database").
         run: |
-          # Build saja tidak membuktikan apa-apa soal runtime: kesalahan di
-          # entrypoint.sh atau path Caddyfile baru muncul saat dijalankan.
-          # Di sini kontainer benar-benar dinyalakan memakai SQLite sementara,
-          # lalu health check Laravel diketuk sampai menjawab.
-          touch /tmp/ci.sqlite && chmod 666 /tmp/ci.sqlite
+          docker run --detach --name taskflow-ci --publish 8080:8080 \
+            --entrypoint sh \
+            --env PORT=8080 \
+            --env APP_KEY="base64:$(head -c 32 /dev/urandom | base64)" \
+            --env APP_ENV=production \
+            --env APP_DEBUG=false \
+            --env APP_URL=http://localhost:8080 \
+            --env DB_CONNECTION=sqlite \
+            --env DB_DATABASE=/tmp/ci.sqlite \
+            --env DB_URL= \
+            --env SESSION_DRIVER=database \
+            --env CACHE_STORE=database \
+            --env QUEUE_CONNECTION=sync \
+            --env LOG_CHANNEL=stderr \
+            taskflow:ci -c 'touch /tmp/ci.sqlite && exec entrypoint'
 
-          docker run -d --name taskflow-ci -p 8080:8080             -v /tmp/ci.sqlite:/tmp/ci.sqlite             -e PORT=8080             -e APP_KEY="base64:$(head -c 32 /dev/urandom | base64)"             -e APP_ENV=production             -e APP_DEBUG=false             -e APP_URL=http://localhost:8080             -e DB_CONNECTION=sqlite             -e DB_DATABASE=/tmp/ci.sqlite             -e DB_URL=             -e SESSION_DRIVER=database             -e CACHE_STORE=database             -e QUEUE_CONNECTION=sync             -e LOG_CHANNEL=stderr             taskflow:ci
-
+      - name: Tunggu health check menjawab
+        run: |
           for i in $(seq 1 30); do
             if curl -fsS http://localhost:8080/up > /dev/null 2>&1; then
-              echo "Health check menjawab."
-
-              # Halaman depan harus mengalihkan tamu ke /login, bukan menampilkan
-              # error 500 -- ini memastikan Laravel benar-benar bisa boot penuh,
-              # bukan sekadar melayani route health check yang tidak menyentuh apa pun.
-              kode=$(curl -s -o /dev/null -w '%{http_code}' -L http://localhost:8080/)
-              echo "GET / -> HTTP $kode"
-              [ "$kode" = "200" ] || { docker logs taskflow-ci; exit 1; }
-
-              docker rm -f taskflow-ci > /dev/null
+              echo "Health check menjawab setelah $((i * 2)) detik."
               exit 0
             fi
             sleep 2
           done
-
-          echo "Kontainer tidak pernah siap dalam 60 detik. Log:"
-          docker logs taskflow-ci
+          echo "Kontainer tidak pernah siap dalam 60 detik."
           exit 1
+
+      - name: Pastikan aplikasi benar-benar boot
+        # /up tidak menyentuh apa pun: ia menjawab 200 bahkan kalau konfigurasi,
+        # route, atau view gagal di-cache. Mengikuti '/' sampai halaman login
+        # membuktikan Laravel boot penuh dan Blade benar-benar bisa dirender.
+        run: |
+          kode=$(curl -s -o /dev/null -w '%{http_code}' -L http://localhost:8080/)
+          echo "GET / -> HTTP $kode"
+          test "$kode" = "200"
+
+      - name: Cetak log kontainer kalau ada yang gagal
+        if: failure()
+        run: docker logs taskflow-ci
+
+      - name: Bersihkan
+        if: always()
+        run: docker rm -f taskflow-ci || true
