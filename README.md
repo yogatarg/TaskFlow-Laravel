@@ -278,8 +278,12 @@ produksi seperti `DB_URL` belum tersedia.
 3. Setelah deploy pertama selesai, isi `APP_URL` dengan URL yang diberikan Render, lalu
    deploy ulang agar tautan absolut memakai domain yang benar.
 
-Migrasi berjalan otomatis setiap kali kontainer menyala. Untuk mengisi akun demo, jalankan
-`php artisan db:seed` sekali lewat Shell milik Render.
+Migrasi dan pengisian akun demo berjalan otomatis setiap kali kontainer menyala. Seeding
+dikendalikan `SEED_ON_BOOT`, karena paket gratis Render tidak menyediakan akses Shell — jadi
+`php artisan db:seed` tidak bisa dijalankan manual sekali setelah deploy. Kedua seeder
+idempoten (`firstOrNew` / `firstOrCreate`), sehingga akun demo memulihkan dirinya sendiri
+tanpa pernah menghasilkan baris ganda. Setel `false` kalau aplikasi ini dipakai dengan data
+sungguhan.
 
 ### Yang perlu diketahui soal paket gratis
 
