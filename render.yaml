@@ -85,6 +85,13 @@ services:
       - key: QUEUE_CONNECTION
         value: sync
 
+      # Paket gratis tidak menyediakan akses Shell, sehingga db:seed tidak bisa
+      # dijalankan manual setelah deploy. Seeder dijalankan entrypoint saat
+      # kontainer menyala; keduanya idempoten (firstOrNew / firstOrCreate).
+      # Matikan (false) kalau aplikasi ini nanti dipakai dengan data sungguhan.
+      - key: SEED_ON_BOOT
+        value: true
+
       # Fitur "lupa kata sandi" tidak benar-benar mengirim email; isinya ditulis
       # ke log. Cukup untuk demo portofolio yang akun-akunnya sudah diketahui.
       - key: MAIL_MAILER

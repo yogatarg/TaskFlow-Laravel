@@ -139,6 +139,7 @@ jobs:
             --env CACHE_STORE=database \
             --env QUEUE_CONNECTION=sync \
             --env LOG_CHANNEL=stderr \
+            --env SEED_ON_BOOT=true \
             taskflow:ci -c 'touch /tmp/ci.sqlite && exec entrypoint'
 
       - name: Tunggu health check menjawab

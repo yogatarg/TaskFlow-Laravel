@@ -24,6 +24,19 @@ echo "==> Menjalankan migrasi"
 # dan kontainer akan menggantung selamanya menunggu jawaban yang tidak akan datang.
 php artisan migrate --force
 
+# Paket gratis Render tidak menyediakan akses Shell, jadi `php artisan db:seed`
+# tidak bisa dijalankan manual sekali setelah deploy. Karena itu seeding dibuat
+# opsional lewat env, dan dinyalakan untuk lingkungan demo.
+#
+# Aman dijalankan berulang: RoleUserSeeder memakai firstOrNew dan TaskSeeder
+# memakai firstOrCreate, jadi tidak ada baris ganda. Efek sampingnya akun demo
+# memulihkan dirinya sendiri setiap kontainer menyala -- untuk demo publik itu
+# justru diinginkan.
+if [ "${SEED_ON_BOOT:-false}" = "true" ]; then
+    echo "==> Mengisi data demo"
+    php artisan db:seed --force
+fi
+
 # Render menyuntikkan nomor port lewat variabel PORT. FrankenPHP membaca alamat
 # dengar dari SERVER_NAME, jadi keduanya dijembatani di sini.
 : "${PORT:=80}"
