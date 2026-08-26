@@ -244,6 +244,56 @@ docs/               catatan teknis
 tests/Feature/      117 test
 ```
 
+## Deploy
+
+Aplikasi di-deploy sebagai kontainer Docker ke [Render](https://render.com), dengan database
+tetap di Neon. Seluruh pengaturan layanan ada di [`render.yaml`](render.yaml), jadi tidak ada
+konfigurasi yang hanya hidup di dashboard dan tidak terlacak.
+
+### Image produksi
+
+[`Dockerfile`](Dockerfile) membangun dalam tiga tahap agar image akhir tidak membawa Node.js,
+Composer, maupun dependensi pengembangan:
+
+1. `node:22-alpine` — membangun aset Tailwind/Vite
+2. `composer:2` — memasang dependensi PHP dengan `--no-dev`
+3. `dunglas/frankenphp` — image akhir
+
+Server webnya **FrankenPHP**: satu binary yang menggabungkan Caddy dan PHP dalam satu proses.
+Alternatif klasiknya nginx + php-fpm + supervisor, yang berarti tiga proses dan empat berkas
+konfigurasi dalam satu kontainer.
+
+Caching konfigurasi (`config:cache`, `route:cache`, `view:cache`) dan migrasi dijalankan oleh
+[`docker/entrypoint.sh`](docker/entrypoint.sh) saat kontainer menyala, **bukan** saat image
+dibangun — sebab `config:cache` membekukan nilai env ke berkas PHP, dan saat build variabel
+produksi seperti `DB_URL` belum tersedia.
+
+### Langkah
+
+1. Di dashboard Render: **New → Blueprint**, arahkan ke repositori ini. `render.yaml` terbaca
+   otomatis.
+2. Isi dua nilai rahasia yang sengaja tidak ada di repo:
+   - `APP_KEY` — hasil `php artisan key:generate --show` (termasuk awalan `base64:`)
+   - `DB_URL` — connection string Neon, memakai endpoint **direct** tanpa `-pooler`
+3. Setelah deploy pertama selesai, isi `APP_URL` dengan URL yang diberikan Render, lalu
+   deploy ulang agar tautan absolut memakai domain yang benar.
+
+Migrasi berjalan otomatis setiap kali kontainer menyala. Untuk mengisi akun demo, jalankan
+`php artisan db:seed` sekali lewat Shell milik Render.
+
+### Yang perlu diketahui soal paket gratis
+
+- Instance **tidur setelah ~15 menit** tanpa pengunjung, dan butuh sekitar satu menit untuk
+  bangun pada kunjungan berikutnya. Kunjungan pertama setelah lama menganggur akan terasa
+  lambat — itu perilaku normal, bukan aplikasinya yang bermasalah.
+- Tidak ada worker antrean, karena itu `QUEUE_CONNECTION=sync`.
+- `MAIL_MAILER=log`: fitur "lupa kata sandi" tidak benar-benar mengirim email.
+
+### Verifikasi sebelum deploy
+
+Job `docker` di CI membangun image pada setiap push. Kalau `Dockerfile` rusak, yang menemukan
+adalah CI — bukan Render saat aplikasi sudah telanjur mati.
+
 ## Dokumentasi
 
 - **[`CLAUDE.md`](CLAUDE.md)** — spesifikasi teknis: skema data, state machine, dan urutan

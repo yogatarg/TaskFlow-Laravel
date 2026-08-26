@@ -1,0 +1,38 @@
+# Berkas yang tidak boleh masuk ke image, atau yang akan dibuat ulang di dalamnya.
+
+.git
+.github
+.gitignore
+.gitattributes
+
+# Dipasang ulang di dalam image oleh tahap build masing-masing.
+vendor
+node_modules
+public/build
+public/hot
+
+# Rahasia. Konfigurasi produksi datang dari variabel env milik penyedia hosting,
+# bukan dari berkas yang ikut ter-build ke dalam image.
+.env
+.env.*
+!.env.example
+
+# Tidak ada gunanya di produksi.
+tests
+phpunit.xml
+pint.json
+docs
+README.md
+CLAUDE.md
+Dockerfile
+.dockerignore
+render.yaml
+
+# Sisa pengembangan lokal.
+storage/logs/*.log
+storage/framework/cache/data/*
+storage/framework/sessions/*
+storage/framework/views/*
+.phpunit.result.cache
+.idea
+.vscode

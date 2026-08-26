@@ -91,3 +91,26 @@ jobs:
         # --test hanya memeriksa, tidak mengubah berkas. Perbaiki secara lokal
         # dengan menjalankan `./vendor/bin/pint`.
         run: ./vendor/bin/pint --test
+
+  docker:
+    name: Build image produksi
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Siapkan Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          # Tidak di-push ke mana pun. Tujuannya hanya memastikan image benar-benar
+          # bisa dibangun, karena kalau Dockerfile rusak yang menemukannya adalah
+          # Render saat deploy -- dan saat itu aplikasinya sudah telanjur mati.
+          push: false
+          load: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

@@ -1,0 +1,91 @@
+# Blueprint Render — infrastruktur sebagai kode.
+#
+# Dengan berkas ini, layanan dibuat lewat menu "New > Blueprint" di dashboard
+# Render lalu mengarahkannya ke repo ini. Semua pengaturan di bawah terbaca
+# otomatis; yang perlu diisi manual hanya nilai bertanda `sync: false`, karena
+# itu rahasia yang tidak boleh masuk ke repositori publik.
+#
+# Databasenya TIDAK didefinisikan di sini: PostgreSQL sudah berjalan di Neon,
+# dan Render hanya perlu tahu cara menyambungnya lewat DB_URL.
+
+services:
+  - type: web
+    name: taskflow
+    runtime: docker
+    plan: free
+    # Neon proyek ini berada di ap-southeast-1 (Singapura). Menaruh aplikasi di
+    # benua lain berarti setiap query menempuh perjalanan bolak-balik ratusan
+    # milidetik, dan satu halaman bisa menjalankan beberapa query.
+    region: singapore
+    branch: main
+    dockerfilePath: ./Dockerfile
+
+    # Laravel menyediakan route /up bawaan. Render memakainya untuk memastikan
+    # kontainer benar-benar siap melayani sebelum lalu lintas dialihkan ke sana.
+    healthCheckPath: /up
+
+    envVars:
+      - key: APP_NAME
+        value: TaskFlow
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+
+      # Isi manual dengan hasil `php artisan key:generate --show`.
+      # Tidak memakai generateValue milik Render karena Laravel menuntut format
+      # khusus: awalan "base64:" diikuti 32 byte teracak.
+      - key: APP_KEY
+        sync: false
+
+      # Isi setelah Render memberi tahu URL layanannya, misalnya
+      # https://taskflow-xxxx.onrender.com — dipakai untuk membuat tautan absolut.
+      - key: APP_URL
+        sync: false
+
+      - key: APP_TIMEZONE
+        value: Asia/Jakarta
+      - key: APP_LOCALE
+        value: id
+      - key: APP_FALLBACK_LOCALE
+        value: en
+
+      # Kontainer tidak menyimpan berkas secara permanen: storage/logs ikut hilang
+      # setiap kali kontainer dimulai ulang. stderr membuat log tertangkap oleh
+      # sistem log Render dan bisa dibaca dari dashboard.
+      - key: LOG_CHANNEL
+        value: stderr
+      - key: LOG_LEVEL
+        value: warning
+
+      - key: DB_CONNECTION
+        value: pgsql
+      # Connection string Neon. Pakai endpoint DIRECT (host tanpa "-pooler"):
+      # endpoint pooler memakai PgBouncer transaction mode, dan migrasi Laravel
+      # yang dibungkus transaksi akan gagal dengan SQLSTATE 25P02.
+      - key: DB_URL
+        sync: false
+      - key: DB_SSLMODE
+        value: require
+
+      - key: SESSION_DRIVER
+        value: database
+      # Aplikasi hanya dilayani lewat HTTPS di produksi, jadi cookie sesi tidak
+      # perlu pernah dikirim lewat koneksi biasa.
+      - key: SESSION_SECURE_COOKIE
+        value: true
+
+      - key: CACHE_STORE
+        value: database
+
+      # sync, bukan database: paket gratis hanya menjalankan satu proses web tanpa
+      # worker. Antrean berbasis database tanpa worker berarti job tidak pernah
+      # dijalankan sama sekali. Aplikasi ini memang belum mengantrekan apa pun,
+      # dan sync memastikan hal itu tetap benar kalau nanti ada yang ditambahkan.
+      - key: QUEUE_CONNECTION
+        value: sync
+
+      # Fitur "lupa kata sandi" tidak benar-benar mengirim email; isinya ditulis
+      # ke log. Cukup untuk demo portofolio yang akun-akunnya sudah diketahui.
+      - key: MAIL_MAILER
+        value: log
