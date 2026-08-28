@@ -74,6 +74,17 @@ RUN { \
     } > "$PHP_INI_DIR/conf.d/opcache.ini" \
     && mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
 
+# Image FrankenPHP memasang file capability cap_net_bind_service pada binary-nya
+# supaya bisa mengikat port di bawah 1024. Render menjalankan kontainer dengan
+# no-new-privileges, dan dalam kondisi itu kernel MENOLAK menjalankan berkas yang
+# punya file capability -- execve gagal dengan EPERM ("Operation not permitted").
+#
+# Capability itu memang tidak dibutuhkan di sini: Render menyuntikkan port tinggi
+# lewat $PORT (10000), dan port di atas 1024 tidak perlu hak istimewa apa pun.
+RUN apk add --no-cache libcap \
+    && setcap -r /usr/local/bin/frankenphp \
+    && ! getcap /usr/local/bin/frankenphp | grep -q cap_
+
 COPY . .
 COPY --from=vendor /app/vendor ./vendor
 COPY --from=aset /app/public/build ./public/build

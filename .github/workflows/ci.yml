@@ -124,8 +124,14 @@ jobs:
         # Berkas SQLite dibuat DI DALAM kontainer, bukan di-mount dari host --
         # berkas hasil bind-mount tidak bisa ditulis oleh proses di dalamnya
         # ("attempt to write a readonly database").
+        #
+        # --security-opt=no-new-privileges meniru pembatasan yang dipakai Render.
+        # Tanpa ini CI meloloskan image yang ditolak Render: kernel menolak
+        # menjalankan berkas yang punya file capability dalam mode tersebut, dan
+        # binary FrankenPHP memang datang dengan cap_net_bind_service terpasang.
         run: |
           docker run --detach --name taskflow-ci --publish 8080:8080 \
+            --security-opt=no-new-privileges \
             --entrypoint sh \
             --env PORT=8080 \
             --env APP_KEY="base64:$(head -c 32 /dev/urandom | base64)" \
