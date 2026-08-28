@@ -9,6 +9,24 @@ desain di sini diambil sadar dan bisa dijelaskan alasannya.
 ![PHP](https://img.shields.io/badge/PHP-8.4%2B-777BB4?logo=php&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Neon-4169E1?logo=postgresql&logoColor=white)
 
+## 🔗 Demo
+
+**[taskflow-xuf6.onrender.com](https://taskflow-xuf6.onrender.com)**
+
+Masuk dengan salah satu akun berikut — password semuanya `password`:
+
+| Email | Peran | Coba lihat |
+|---|---|---|
+| `sari@taskflow.test` | User | Buat task, lalu ajukan ke approver |
+| `approver@taskflow.test` | Approver | Menu **Approval** — setujui, tolak, atau minta revisi |
+| `admin@taskflow.test` | Admin | Menu **Kelola User** dan **Log** |
+
+> Berjalan di paket gratis Render, jadi instance-nya tidur setelah ~15 menit tanpa pengunjung.
+> Kunjungan pertama bisa perlu sekitar satu menit untuk membangunkannya — setelah itu normal.
+>
+> Data demo dipakai bersama semua pengunjung dan tidak direset. Kalau menemukan task yang
+> sudah disetujui atau ditolak orang lain, itu memang begitu adanya.
+
 ---
 
 ## Tentang
@@ -246,7 +264,8 @@ tests/Feature/      117 test
 
 ## Deploy
 
-Aplikasi di-deploy sebagai kontainer Docker ke [Render](https://render.com), dengan database
+Aplikasi berjalan di **[taskflow-xuf6.onrender.com](https://taskflow-xuf6.onrender.com)**,
+di-deploy sebagai kontainer Docker ke [Render](https://render.com), dengan database
 tetap di Neon. Seluruh pengaturan layanan ada di [`render.yaml`](render.yaml), jadi tidak ada
 konfigurasi yang hanya hidup di dashboard dan tidak terlacak.
 
