@@ -355,6 +355,11 @@ satu commit tersendiri:
 Yang belum ada dan bukan bagian dari spesifikasi: notifikasi ke approver saat ada task
 masuk, ekspor laporan, dan approval berjenjang lebih dari satu tingkat.
 
+## Lisensi
+
+[MIT](LICENSE) — bebas dipakai, diubah, dan disebarkan, termasuk untuk keperluan komersial,
+selama keterangan hak cipta tetap disertakan.
+
 ## Catatan
 
 Proyek ini sempat dirintis dengan Next.js + Prisma + NextAuth sebelum dibangun ulang dengan
