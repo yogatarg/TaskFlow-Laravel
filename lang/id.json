@@ -31,11 +31,6 @@
     "Delete Account": "Hapus Akun",
     "Are you sure you want to delete your account?": "Yakin ingin menghapus akun Anda?",
     "Once your account is deleted, all of its resources and data will be permanently deleted. Before deleting your account, please download any data or information that you wish to retain.": "Setelah akun dihapus, seluruh data yang menyertainya ikut terhapus permanen. Simpan dulu data yang ingin Anda pertahankan sebelum melanjutkan. Catatan: akun yang pernah memproses approval atau masih menjadi approver bagi user lain tidak bisa dihapus, demi menjaga riwayat approval tetap bisa ditelusuri.",
-    "Once your account is deleted, all of its resources and data will be permanently deleted. Please enter your password to confirm you would like to permanently delete your account.": "Setelah akun dihapus, seluruh data yang menyertainya ikut terhapus permanen. Masukkan kata sandi Anda untuk memastikan Anda benar-benar ingin menghapusnya.",
+    "Once your account is deleted, all of its resources and data will be permanently deleted. Please enter your password to confirm you would like to permanently delete your account.": "Setelah akun dihapus, seluruh data yang menyertainya ikut terhapus permanen. Masukkan kata sandi Anda untuk memastikan Anda benar-benar ingin menghapusnya."
 
-    "Your email address is unverified.": "Alamat email Anda belum terverifikasi.",
-    "Click here to re-send the verification email.": "Klik di sini untuk mengirim ulang email verifikasi.",
-    "A new verification link has been sent to your email address.": "Tautan verifikasi baru telah dikirim ke alamat email Anda.",
-    "A new verification link has been sent to the email address you provided during registration.": "Tautan verifikasi baru telah dikirim ke alamat email yang Anda daftarkan.",
-    "Resend Verification Email": "Kirim Ulang Email Verifikasi"
 }

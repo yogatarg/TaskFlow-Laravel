@@ -32,7 +32,6 @@ class RoleUserSeeder extends Seeder
 
         $user->name = $nama;
         $user->password = Hash::make('password');
-        $user->email_verified_at = now();
         $user->role = $role;
         $user->approver_id = $approver?->id;
         $user->save();

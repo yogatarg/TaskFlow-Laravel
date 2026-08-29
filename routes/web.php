@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\Route;
  */
 Route::redirect('/', '/dashboard');
 
-// Middleware auth+verified dipasang di DashboardController::middleware().
+// Middleware auth dipasang di DashboardController::middleware().
 Route::get('/dashboard', DashboardController::class)->name('dashboard');
 
 Route::middleware('auth')->group(function () {
