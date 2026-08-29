@@ -11,11 +11,25 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Task extends Model
 {
     /** @use HasFactory<TaskFactory> */
     use HasFactory;
+
+    /**
+     * Task tidak pernah benar-benar dihapus dari database.
+     *
+     * approval_logs.task_id memakai cascadeOnDelete, jadi menghapus baris task berarti
+     * ikut menghapus seluruh riwayat approval-nya secara diam-diam. SoftDeletes membuat
+     * task hilang dari semua daftar sambil menyisakan barisnya, sehingga log tetap utuh
+     * dan salah hapus masih bisa dipulihkan.
+     *
+     * Semua query Eloquent otomatis menyaring baris terhapus -- daftar task, inbox
+     * approver, dan hitungan dashboard ikut bersih tanpa satu pun where() tambahan.
+     */
+    use SoftDeletes;
 
     /**
      * `status` dan `created_by` sengaja tidak ikut fillable.

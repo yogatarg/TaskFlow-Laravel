@@ -39,6 +39,7 @@ class TaskController extends Controller implements HasMiddleware
             new Middleware('can:view,task', only: ['show']),
             new Middleware('can:update,task', only: ['edit', 'update']),
             new Middleware('can:delete,task', only: ['destroy']),
+            new Middleware('can:restore,task', only: ['restore']),
         ];
     }
 
@@ -46,7 +47,12 @@ class TaskController extends Controller implements HasMiddleware
     {
         $user = $request->user();
 
+        // Hanya Admin yang boleh melihat arsip. Tanpa penjagaan ini, user biasa bisa
+        // menambahkan ?arsip=1 di URL dan melihat kembali task yang sudah disingkirkan.
+        $lihatArsip = $user->isAdmin() && $request->boolean('arsip');
+
         $tasks = Task::query()
+            ->when($lihatArsip, fn ($q) => $q->onlyTrashed())
             // Admin melihat semua task; user lain hanya miliknya sendiri.
             ->when(! $user->isAdmin(), fn ($q) => $q->milik($user))
             ->with('creator')
@@ -60,6 +66,7 @@ class TaskController extends Controller implements HasMiddleware
             'tasks' => $tasks,
             'daftarStatus' => TaskStatus::cases(),
             'daftarLabel' => TaskLabel::cases(),
+            'lihatArsip' => $lihatArsip,
         ]);
     }
 
@@ -112,7 +119,21 @@ class TaskController extends Controller implements HasMiddleware
 
         return redirect()
             ->route('tasks.index')
-            ->with('status', 'Task dihapus.');
+            ->with('status', 'Task disembunyikan. Riwayat approval-nya tetap tersimpan.');
+    }
+
+    /**
+     * Memulihkan task yang disembunyikan. Parameter route memakai withTrashed()
+     * di routes/web.php -- tanpa itu route model binding tidak akan pernah menemukan
+     * task yang sudah terhapus, dan hasilnya 404 alih-alih pemulihan.
+     */
+    public function restore(Task $task): RedirectResponse
+    {
+        $task->restore();
+
+        return redirect()
+            ->route('tasks.show', $task)
+            ->with('status', 'Task dipulihkan.');
     }
 
     /**

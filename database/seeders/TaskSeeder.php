@@ -32,7 +32,10 @@ class TaskSeeder extends Seeder
         ];
 
         foreach ($contoh as [$pemilik, $judul, $label, $prioritas, $hari]) {
-            Task::firstOrCreate(
+            // withTrashed() penting: tanpa ini, task contoh yang sudah disembunyikan
+            // Admin akan dibuat ulang setiap kontainer menyala, karena firstOrCreate
+            // tidak melihat baris yang ter-soft-delete dan mengira task itu belum ada.
+            Task::withTrashed()->firstOrCreate(
                 ['created_by' => $pemilik->id, 'title' => $judul],
                 [
                     'description' => 'Contoh data awal untuk mencoba alur TaskFlow.',

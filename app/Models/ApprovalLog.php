@@ -65,9 +65,18 @@ class ApprovalLog extends Model
         });
     }
 
+    /**
+     * withTrashed() disengaja: log bersifat append-only dan harus tetap terbaca utuh
+     * meski task-nya sudah di-soft-delete. Tanpa ini $log->task menjadi null, dan
+     * halaman Log akan menampilkan baris tanpa judul -- atau lebih buruk, error.
+     *
+     * Konsekuensinya judul task yang dihapus masih terlihat di halaman Log milik Admin.
+     * Itu memang harga dari riwayat yang tidak bisa dibengkokkan: yang disembunyikan
+     * adalah task-nya, bukan fakta bahwa dulu ia pernah diputuskan seseorang.
+     */
     public function task(): BelongsTo
     {
-        return $this->belongsTo(Task::class);
+        return $this->belongsTo(Task::class)->withTrashed();
     }
 
     /**

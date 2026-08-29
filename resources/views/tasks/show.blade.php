@@ -123,10 +123,10 @@
 
                 @can('delete', $task)
                     <form method="POST" action="{{ route('tasks.destroy', $task) }}"
-                          onsubmit="return confirm('Hapus task ini? Tindakan ini tidak bisa dibatalkan.')">
+                          onsubmit="return confirm('Sembunyikan task ini? Task akan hilang dari semua daftar, tapi riwayat approval-nya tetap tersimpan dan Admin masih bisa memulihkannya.')">
                         @csrf
                         @method('DELETE')
-                        <x-danger-button type="submit">Hapus</x-danger-button>
+                        <x-danger-button type="submit">Sembunyikan</x-danger-button>
                     </form>
                 @endcan
 

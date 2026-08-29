@@ -51,14 +51,49 @@ class TaskPolicy
     }
 
     /**
-     * Aturan hapus sengaja disamakan dengan aturan edit. Task yang sudah diajukan
-     * atau sudah diputuskan tidak boleh hilang, karena riwayat approval-nya (tahap 4)
-     * harus tetap bisa ditelusuri.
+     * Menghapus task. Karena Task memakai SoftDeletes, ini menyembunyikan -- bukan
+     * melenyapkan. Barisnya tetap ada dan riwayat approval-nya tetap utuh.
+     *
+     * Dua jalur dengan alasan berbeda:
+     *
+     *   Admin  -> boleh menyingkirkan task berstatus APA PUN. Inilah wujud nyata
+     *             "akses penuh" dalam spesifikasi. Aman justru karena soft delete:
+     *             yang disembunyikan task-nya, riwayatnya tidak ikut hilang.
+     *
+     *   Pemilik -> hanya selama task masih di tangannya (Draft / Revision Requested).
+     *             Begitu diajukan, task berada dalam penilaian orang lain; membatalkannya
+     *             sepihak berarti menarik sesuatu yang sedang dinilai. Kalau memang perlu,
+     *             minta approver menolaknya, atau minta Admin menyingkirkannya.
      */
     public function delete(User $user, Task $task): bool
     {
-        return $this->pemilikAtauAdmin($user, $task)
+        if ($user->isAdmin()) {
+            return true;
+        }
+
+        return $task->created_by === $user->id
             && $task->status->isEditable();
+    }
+
+    /**
+     * Memulihkan task yang disembunyikan. Hanya Admin -- kalau pemilik bisa memulihkan
+     * sendiri, penyembunyian oleh Admin jadi tidak ada artinya.
+     */
+    public function restore(User $user, Task $task): bool
+    {
+        return $user->isAdmin();
+    }
+
+    /**
+     * Hapus permanen: TIDAK PERNAH, oleh siapa pun.
+     *
+     * approval_logs.task_id memakai cascadeOnDelete, jadi menghapus baris task benar-benar
+     * akan menghapus riwayat approval-nya. Tidak ada kebutuhan yang sepadan dengan itu.
+     * Ditulis eksplisit supaya keputusannya terbaca, bukan tampak seperti kelalaian.
+     */
+    public function forceDelete(User $user, Task $task): bool
+    {
+        return false;
     }
 
     /**

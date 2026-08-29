@@ -124,6 +124,22 @@ yang jelas alih-alih membiarkannya jadi error 500.
 
 Log yang bisa dirapikan belakangan bukan log.
 
+### Task disembunyikan, tidak pernah dihapus
+
+`approval_logs.task_id` memakai `cascadeOnDelete`, jadi menghapus baris task berarti ikut
+melenyapkan riwayat approval-nya secara diam-diam — persis hal yang dicegah oleh sifat
+append-only di atas.
+
+Karena itu `Task` memakai `SoftDeletes`. Admin boleh menyingkirkan task berstatus apa pun
+dan task itu hilang dari semua daftar, inbox approver, serta hitungan dashboard — tapi
+barisnya tetap ada, log-nya tetap utuh, dan Admin bisa memulihkannya dari **Arsip**.
+`forceDelete` ditolak untuk semua orang, ditulis eksplisit di Policy supaya terbaca sebagai
+keputusan, bukan kelalaian.
+
+Relasi `ApprovalLog::task()` memakai `withTrashed()`: log harus tetap terbaca utuh meski
+task-nya disembunyikan. Konsekuensinya judul task yang disembunyikan masih terlihat di
+halaman Log milik Admin — itu memang harga dari riwayat yang tidak bisa dibengkokkan.
+
 ### Anti klik-ganda pada keputusan approval
 
 Perpindahan status memakai `lockForUpdate()` disertai pembacaan ulang status di dalam

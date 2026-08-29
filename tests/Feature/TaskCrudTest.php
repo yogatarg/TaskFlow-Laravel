@@ -201,7 +201,10 @@ class TaskCrudTest extends TestCase
             ->delete(route('tasks.destroy', $task))
             ->assertRedirect(route('tasks.index'));
 
-        $this->assertDatabaseMissing('tasks', ['id' => $task->id]);
+        // Task memakai SoftDeletes, jadi barisnya sengaja tetap ada dengan deleted_at
+        // terisi -- bukan assertDatabaseMissing. Perilaku lengkapnya diuji di
+        // SoftDeleteTaskTest; di sini cukup dipastikan route destroy memang bekerja.
+        $this->assertSoftDeleted('tasks', ['id' => $task->id]);
     }
 
     public function test_user_lain_tidak_bisa_menghapus_task_yang_bukan_miliknya(): void

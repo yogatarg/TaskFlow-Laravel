@@ -33,6 +33,18 @@ Route::middleware('auth')->group(function () {
 Route::resource('tasks', TaskController::class);
 
 /*
+ * Memulihkan task yang disembunyikan.
+ *
+ * ->withTrashed() pada route WAJIB: tanpa itu route model binding hanya mencari task
+ * yang belum terhapus, sehingga permintaan pemulihan selalu berakhir 404 -- persis
+ * untuk task yang justru ingin dipulihkan.
+ */
+Route::post('tasks/{task}/restore', [TaskController::class, 'restore'])
+    ->withTrashed()
+    ->middleware('auth')
+    ->name('tasks.restore');
+
+/*
  * Perpindahan status task. Sengaja di luar Route::resource karena bukan operasi CRUD:
  * tidak ada data yang dibuat, diubah isinya, atau dihapus -- yang bergerak adalah
  * posisi task di dalam state machine.
