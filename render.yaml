@@ -70,6 +70,11 @@ services:
 
       - key: SESSION_DRIVER
         value: database
+      # 8 jam. Instance paket gratis tidur tiap 15 menit, sehingga pengunjung
+      # sering membuka halaman, menunggu bangun, lalu teralihkan. Masa sesi 2 jam
+      # bawaan Laravel membuat mereka kembali ke halaman "sesi berakhir".
+      - key: SESSION_LIFETIME
+        value: 480
       # Aplikasi hanya dilayani lewat HTTPS di produksi, jadi cookie sesi tidak
       # perlu pernah dikirim lewat koneksi biasa.
       - key: SESSION_SECURE_COOKIE

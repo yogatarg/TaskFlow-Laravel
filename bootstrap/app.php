@@ -4,6 +4,8 @@ use App\Http\Middleware\EnsureUserHasRole;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -35,5 +37,32 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->trustProxies(at: '*');
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        /*
+         * Token CSRF yang kedaluwarsa menghasilkan halaman "419 | Page Expired"
+         * yang telanjang dan tidak menjelaskan apa pun. Bagi pengunjung, itu
+         * terbaca seperti aplikasi rusak -- padahal justru penjagaan yang bekerja.
+         *
+         * Kasus paling umum: halaman login dibuka lalu didiamkan melewati masa
+         * sesi, atau tombol Back menampilkan halaman lama dari cache peramban.
+         *
+         * Diarahkan kembali dengan pesan yang bisa ditindaklanjuti. Kalau sesinya
+         * benar-benar habis, $request->user() sudah null dan pengunjung dibawa ke
+         * halaman login; kalau hanya token yang basi, ia dikembalikan ke halaman
+         * asalnya tanpa kehilangan konteks.
+         */
+        $exceptions->respond(function (Response $response, Throwable $e, Request $request) {
+            if ($response->getStatusCode() !== 419) {
+                return $response;
+            }
+
+            $pesan = 'Sesi Anda sudah berakhir karena halaman dibiarkan terlalu lama. Silakan coba lagi.';
+
+            if ($request->expectsJson()) {
+                return response()->json(['message' => $pesan], 419);
+            }
+
+            return redirect()
+                ->to($request->user() ? url()->previous() : route('login'))
+                ->with('status', $pesan);
+        });
     })->create();
