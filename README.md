@@ -221,6 +221,33 @@ Seeder membuat empat akun. Password semuanya `password`.
 
 Perhatikan bahwa Approver pun punya atasan: task miliknya sendiri diajukan ke Admin.
 
+### Membuat Admin tanpa lewat aplikasi
+
+Role hanya bisa diubah oleh Admin. Aturan itu disengaja, tapi menimbulkan satu keadaan
+buntu: kalau database tidak pernah di-seed, atau admin terakhir terlanjur dihapus, tidak
+ada lagi seorang pun yang berhak mengangkat admin baru. Aplikasinya hidup, tapi tidak ada
+yang bisa mengelolanya.
+
+```bash
+php artisan taskflow:buat-admin bos@perusahaan.test
+```
+
+Kalau emailnya belum terdaftar, akun baru dibuat; kalau sudah, user itu dinaikkan menjadi
+Admin **tanpa mengubah password-nya** — perintah ini dijalankan oleh operator server, bukan
+oleh pemilik akun, jadi mengganti password orang lain diam-diam bukan wewenangnya.
+
+Password selalu ditanyakan lewat prompt tersembunyi dan tidak tersedia sebagai opsi baris
+perintah, karena argumen perintah tersimpan di riwayat shell dan terbaca oleh siapa pun yang
+menjalankan `ps` di mesin yang sama.
+
+Wewenangnya di sini tidak datang dari dalam aplikasi melainkan dari akses ke shell server —
+dan siapa pun yang sudah bisa membuka shell produksi memang sudah memegang kunci segalanya.
+Tidak ada wewenang baru yang diberikan, hanya dipindahkan ke jalur yang bisa diaudit.
+
+> Catatan: paket gratis Render tidak menyediakan akses Shell, jadi di lingkungan itu admin
+> awal tetap datang dari seeder (`SEED_ON_BOOT`). Perintah ini dipakai saat pengembangan
+> lokal dan pada lingkungan yang shell-nya bisa dibuka.
+
 ### Mencoba alurnya
 
 1. Login sebagai **Sari** → buat task → buka detailnya → **Ajukan ke Approver**
