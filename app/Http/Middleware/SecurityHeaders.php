@@ -43,7 +43,11 @@ class SecurityHeaders
         // HSTS hanya bermakna kalau koneksinya sudah HTTPS. Memasangnya pada
         // koneksi biasa tidak berguna, dan di lingkungan lokal justru merepotkan
         // karena peramban akan memaksa https untuk seluruh localhost.
-        if ($request->secure()) {
+        //
+        // Lingkungan produksi ikut dimasukkan karena $request->secure() ternyata
+        // tidak bisa diandalkan di balik rantai proxy berlapis -- lihat penjelasan
+        // di AppServiceProvider. Di produksi, HTTPS memang satu-satunya jalan masuk.
+        if ($request->secure() || app()->isProduction()) {
             $response->headers->set(
                 'Strict-Transport-Security',
                 'max-age=31536000; includeSubDomains'

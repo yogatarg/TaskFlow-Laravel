@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\User;
+use App\Providers\AppServiceProvider;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\RateLimiter;
 use Tests\TestCase;
@@ -87,5 +88,20 @@ class KeamananTest extends TestCase
         $this->assertAuthenticated();
 
         $this->assertSame(0, RateLimiter::attempts('benar@taskflow.test|127.0.0.1'));
+    }
+
+    public function test_hsts_dan_https_dipaksa_di_produksi(): void
+    {
+        // $request->secure() tidak bisa diandalkan di balik rantai proxy berlapis,
+        // jadi produksi menyatakan HTTPS secara eksplisit. Test ini menjaga agar
+        // keduanya tidak diam-diam kembali bergantung pada penguraian header.
+        $this->app['env'] = 'production';
+        (new AppServiceProvider($this->app))->boot();
+
+        $this->assertStringStartsWith('https://', url('/login'));
+
+        $this->get(route('login'))
+            ->assertOk()
+            ->assertHeader('Strict-Transport-Security');
     }
 }
