@@ -53,12 +53,22 @@ class UpdateUserRequest extends FormRequest
                     $validator->errors()->add('approver_id', 'User tidak boleh menjadi approver bagi dirinya sendiri.');
                 }
 
-                // 2. Cegah lingkaran langsung: A approver-nya B, sementara B approver-nya A.
-                if ($this->filled('approver_id')) {
-                    $calon = User::find($this->integer('approver_id'));
-
-                    if ($calon && $calon->approver_id === $target->id) {
-                        $validator->errors()->add('approver_id', 'Tidak bisa: user tersebut sudah dijadikan approver oleh yang bersangkutan (lingkaran approval).');
+                // 2. Cegah lingkaran approval sedalam apa pun, bukan hanya A<->B.
+                //
+                //    Rantai approver bisa bertingkat: staf -> supervisor -> manajer ->
+                //    direktur. Semakin panjang rantainya, semakin mudah lingkaran
+                //    terbentuk tanpa disadari -- misalnya A -> B -> C -> A. Kalau itu
+                //    terjadi tidak ada yang error: task tetap bisa diajukan dan
+                //    diputuskan. Yang hilang adalah maknanya -- tidak ada lagi puncak
+                //    rantai, dan semua saling menyetujui secara melingkar tanpa ada
+                //    yang benar-benar bertanggung jawab.
+                if ($this->filled('approver_id') && $this->integer('approver_id') !== $target->id) {
+                    if ($nama = $this->lingkaranTerbentukLewat($target, $this->integer('approver_id'))) {
+                        $validator->errors()->add(
+                            'approver_id',
+                            "Tidak bisa: {$nama} berada di bawah {$target->name} dalam rantai approval, "
+                            .'sehingga pilihan ini akan membentuk lingkaran.'
+                        );
                     }
                 }
 
@@ -82,5 +92,43 @@ class UpdateUserRequest extends FormRequest
         return [
             'approver_id' => 'approver',
         ];
+    }
+
+    /**
+     * Menelusuri rantai approver ke atas mulai dari calon approver.
+     *
+     * Mengembalikan nama simpul tempat lingkaran terbentuk, atau null kalau rantainya
+     * aman. Menetapkan $calonId sebagai approver bagi $target membentuk lingkaran bila
+     * $target sendiri berada di suatu tempat pada rantai di atas $calonId.
+     *
+     * Seluruh pasangan id/approver_id diambil sekali saja, lalu ditelusuri di memori.
+     * Menelusurinya lewat query per tingkat berarti satu query untuk tiap tingkat
+     * rantai, dan tabel user pada aplikasi seperti ini memang kecil.
+     *
+     * $sudahDilewati juga menjaga dari data yang sudah terlanjur melingkar sebelum
+     * aturan ini ada -- tanpa itu, penelusuran tidak akan pernah berhenti.
+     */
+    private function lingkaranTerbentukLewat(User $target, int $calonId): ?string
+    {
+        $rantai = User::pluck('approver_id', 'id');
+        $nama = User::pluck('name', 'id');
+
+        $sudahDilewati = [];
+        $kursor = $calonId;
+
+        while ($kursor !== null) {
+            if ($kursor === $target->id) {
+                return $nama[$calonId] ?? 'User tersebut';
+            }
+
+            if (in_array($kursor, $sudahDilewati, true)) {
+                break;
+            }
+
+            $sudahDilewati[] = $kursor;
+            $kursor = $rantai[$kursor] ?? null;
+        }
+
+        return null;
     }
 }
