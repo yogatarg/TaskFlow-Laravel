@@ -274,4 +274,29 @@ class TaskCrudTest extends TestCase
             ->assertOk()
             ->assertSee('Belum ada approver');
     }
+
+    public function test_admin_tanpa_approver_diarahkan_memperbaikinya_sendiri(): void
+    {
+        // Menyuruh Admin "hubungi Admin" berarti menyuruhnya menghubungi dirinya
+        // sendiri; ia justru satu-satunya yang bisa memperbaikinya.
+        $admin = User::factory()->admin()->create();
+        $task = Task::factory()->create(['created_by' => $admin->id]);
+
+        $this->actingAs($admin)
+            ->get(route('tasks.show', $task))
+            ->assertOk()
+            ->assertSee('halaman Kelola User')
+            ->assertDontSee('Hubungi Admin untuk menetapkannya');
+    }
+
+    public function test_user_biasa_tetap_disuruh_menghubungi_admin(): void
+    {
+        $user = User::factory()->create();
+        $task = Task::factory()->create(['created_by' => $user->id]);
+
+        $this->actingAs($user)
+            ->get(route('tasks.show', $task))
+            ->assertOk()
+            ->assertSee('Hubungi Admin untuk menetapkannya');
+    }
 }

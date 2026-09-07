@@ -70,7 +70,15 @@
             @if ($task->created_by === auth()->id() && $task->status->bisaDisubmit() && ! $task->approver())
                 <div class="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
                     Task belum bisa diajukan karena Anda belum punya approver.
-                    Hubungi Admin untuk menetapkannya lebih dulu.
+                    {{-- Admin bisa memperbaikinya sendiri; menyuruhnya "hubungi Admin"
+                         berarti menyuruhnya menghubungi dirinya sendiri. --}}
+                    @if (auth()->user()->isAdmin())
+                        Tetapkan lebih dulu di
+                        <a href="{{ route('admin.users.edit', auth()->user()) }}"
+                           class="font-semibold underline">halaman Kelola User</a>.
+                    @else
+                        Hubungi Admin untuk menetapkannya lebih dulu.
+                    @endif
                 </div>
             @endif
 

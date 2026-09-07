@@ -280,4 +280,27 @@ class DashboardTest extends TestCase
             ->assertOk()
             ->assertSee('Belum ada aktivitas approval sama sekali.');
     }
+
+    public function test_admin_diingatkan_bahwa_ia_juga_bisa_mengajukan_task(): void
+    {
+        $approver = User::factory()->approver()->create(['name' => 'Budi Penyetuju']);
+        $admin = User::factory()->admin()->create(['approver_id' => $approver->id]);
+
+        $this->actingAs($admin)
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->assertSee('membuat dan mengajukan task sendiri')
+            ->assertSee('Budi Penyetuju');
+    }
+
+    public function test_admin_tanpa_approver_diberi_tautan_untuk_menetapkannya_sendiri(): void
+    {
+        $admin = User::factory()->admin()->create(); // approver_id null
+
+        $this->actingAs($admin)
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->assertSee('belum punya approver')
+            ->assertSee(route('admin.users.edit', $admin), escape: false);
+    }
 }

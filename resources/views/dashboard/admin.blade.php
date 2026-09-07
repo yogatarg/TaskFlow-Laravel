@@ -63,6 +63,23 @@
                          judul="Aktivitas Terbaru Seluruh Organisasi"
                          kosong="Belum ada aktivitas approval sama sekali." />
 
+            {{--
+                Admin juga ikut dalam alur persetujuan seperti siapa pun: peran
+                menentukan ia boleh melakukan apa, approver_id menentukan task-nya
+                dikirim ke siapa. Angka-angka di atas bersudut pandang organisasi,
+                jadi task pribadi Admin tidak terlihat di mana pun tanpa keterangan ini.
+            --}}
+            <p class="text-xs text-gray-500">
+                Anda juga bisa membuat dan mengajukan task sendiri &mdash;
+                @if (auth()->user()->approver)
+                    task Anda diajukan ke <strong>{{ auth()->user()->approver->name }}</strong>.
+                @else
+                    tapi Anda belum punya approver, jadi task Anda belum bisa diajukan.
+                    <a href="{{ route('admin.users.edit', auth()->user()) }}"
+                       class="text-indigo-600 hover:underline">Tetapkan approver Anda</a>.
+                @endif
+            </p>
+
             <p class="text-xs text-gray-500">
                 Riwayat lengkap beserta filter ada di
                 <a href="{{ route('admin.logs.index') }}" class="text-indigo-600 hover:underline">halaman Log</a>.
