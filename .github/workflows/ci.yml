@@ -162,12 +162,22 @@ jobs:
 
       - name: Pastikan aplikasi benar-benar boot
         # /up tidak menyentuh apa pun: ia menjawab 200 bahkan kalau konfigurasi,
-        # route, atau view gagal di-cache. Mengikuti '/' sampai halaman login
-        # membuktikan Laravel boot penuh dan Blade benar-benar bisa dirender.
+        # route, atau view gagal di-cache. Merender halaman login membuktikan
+        # Laravel boot penuh dan Blade benar-benar bisa dirender.
+        #
+        # Sengaja TIDAK memakai curl -L dari '/'. Kontainer ini berjalan dengan
+        # APP_ENV=production, dan produksi memaksa skema https (lihat
+        # AppServiceProvider), sehingga mengikuti pengalihan akan berujung ke
+        # https://localhost:8080 yang tidak melayani TLS -- curl gagal dengan
+        # galat SSL, bukan karena aplikasinya bermasalah.
         run: |
-          kode=$(curl -s -o /dev/null -w '%{http_code}' -L http://localhost:8080/)
-          echo "GET / -> HTTP $kode"
+          kode=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/login)
+          echo "GET /login -> HTTP $kode"
           test "$kode" = "200"
+
+          alih=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/)
+          echo "GET / -> HTTP $alih (diharapkan pengalihan)"
+          test "$alih" = "302"
 
       - name: Cetak log kontainer kalau ada yang gagal
         if: failure()
