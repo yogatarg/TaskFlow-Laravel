@@ -19,15 +19,39 @@
                     </div>
 
                     <div>
+                        @php
+                            // Admin tidak boleh menurunkan peran akunnya sendiri -- kalau bisa,
+                            // sistem berpeluang kehilangan admin terakhir dan tidak ada lagi yang
+                            // sanggup mengatur peran siapa pun dari dalam aplikasi.
+                            //
+                            // Penguncian di sini hanya soal tampilan: memberi tahu sejak awal
+                            // alih-alih membiarkan Admin memilih lalu ditolak setelah Simpan.
+                            // Penjagaan yang sesungguhnya tetap di UpdateUserRequest, karena
+                            // dropdown yang dinonaktifkan tidak menghentikan siapa pun yang
+                            // mengirim data lewat alat lain.
+                            $akunSendiri = $user->is(auth()->user());
+                        @endphp
+
                         <x-input-label for="role" value="Role" />
-                        <select id="role" name="role"
-                                class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
+                        <select id="role" name="role" @disabled($akunSendiri)
+                                class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm disabled:bg-gray-100 disabled:text-gray-500">
                             @foreach ($roles as $role)
                                 <option value="{{ $role->value }}" @selected(old('role', $user->role->value) === $role->value)>
                                     {{ $role->label() }}
                                 </option>
                             @endforeach
                         </select>
+
+                        @if ($akunSendiri)
+                            {{-- Field yang disabled tidak ikut terkirim, jadi nilainya
+                                 disertakan lewat input tersembunyi agar validasi tetap lolos. --}}
+                            <input type="hidden" name="role" value="{{ $user->role->value }}">
+                            <p class="mt-1 text-xs text-gray-500">
+                                Anda tidak bisa mengubah peran akun sendiri. Minta admin lain
+                                kalau memang perlu diubah.
+                            </p>
+                        @endif
+
                         <x-input-error class="mt-2" :messages="$errors->get('role')" />
                     </div>
 

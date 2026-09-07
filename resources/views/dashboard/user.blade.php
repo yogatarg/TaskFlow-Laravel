@@ -17,7 +17,7 @@
                         :href="route('tasks.index', ['status' => \App\Enums\TaskStatus::PendingApproval->value])" />
 
                 <x-stat label="In Progress" :nilai="$hitungan->dikerjakan" tone="text-gray-900"
-                        keterangan="Draft &amp; diminta revisi — masih di tangan Anda" />
+                        keterangan="Draft & diminta revisi — masih di tangan Anda" />
 
                 <x-stat label="Selesai" :nilai="$hitungan->selesai" tone="text-green-600"
                         keterangan="Disetujui approver"

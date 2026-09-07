@@ -170,4 +170,44 @@ class UserManagementTest extends TestCase
             ->assertSee('Admin Utama')
             ->assertDontSee('<option value="'.$user->id.'"', escape: false);
     }
+
+    public function test_dropdown_role_dikunci_saat_admin_menyunting_akunnya_sendiri(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        $this->actingAs($admin)
+            ->get(route('admin.users.edit', $admin))
+            ->assertOk()
+            ->assertSee('disabled', escape: false)
+            ->assertSee('tidak bisa mengubah peran akun sendiri');
+    }
+
+    public function test_dropdown_role_tetap_terbuka_saat_menyunting_user_lain(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $lain = User::factory()->create();
+
+        $this->actingAs($admin)
+            ->get(route('admin.users.edit', $lain))
+            ->assertOk()
+            ->assertDontSee('tidak bisa mengubah peran akun sendiri');
+    }
+
+    public function test_admin_tetap_bisa_menyimpan_perubahan_approver_akunnya_sendiri(): void
+    {
+        // Dropdown role dikunci, tapi field lain harus tetap bisa disimpan --
+        // nilai role dikirim lewat input tersembunyi supaya validasi lolos.
+        $admin = User::factory()->admin()->create();
+        $approver = User::factory()->approver()->create();
+
+        $this->actingAs($admin)
+            ->put(route('admin.users.update', $admin), [
+                'role' => Role::Admin->value,
+                'approver_id' => $approver->id,
+            ])
+            ->assertRedirect(route('admin.users.index'))
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame($approver->id, $admin->refresh()->approver_id);
+    }
 }
