@@ -43,5 +43,24 @@
                 {{ __('Log in') }}
             </x-primary-button>
         </div>
+
+        {{--
+            Breeze menaruh tautan Register di halaman sambutan, bukan di sini.
+            Halaman sambutan itu dihapus ketika '/' diubah menjadi pengalihan ke
+            dashboard, sehingga halaman pendaftaran jadi hanya bisa dicapai dengan
+            mengetik /register langsung -- terbuka, tapi tidak terlihat.
+
+            Route::has() dipakai supaya bagian ini hilang dengan sendirinya kalau
+            suatu saat pendaftaran mandiri ditutup.
+        --}}
+        @if (Route::has('register'))
+            <p class="mt-6 text-center text-sm text-gray-600">
+                {{ __('Belum punya akun?') }}
+                <a href="{{ route('register') }}"
+                   class="underline text-gray-900 hover:text-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    {{ __('Daftar di sini') }}
+                </a>
+            </p>
+        @endif
     </form>
 </x-guest-layout>

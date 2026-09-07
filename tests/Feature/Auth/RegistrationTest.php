@@ -28,4 +28,15 @@ class RegistrationTest extends TestCase
         $this->assertAuthenticated();
         $response->assertRedirect(route('dashboard', absolute: false));
     }
+
+    public function test_halaman_login_menautkan_ke_pendaftaran(): void
+    {
+        // Breeze menaruh tautan ini di halaman sambutan, yang sudah dihapus.
+        // Tanpa test ini, halaman pendaftaran bisa kembali tidak terjangkau
+        // tanpa ada yang menyadarinya.
+        $this->get(route('login'))
+            ->assertOk()
+            ->assertSee(route('register'), escape: false)
+            ->assertSee('Daftar di sini');
+    }
 }
