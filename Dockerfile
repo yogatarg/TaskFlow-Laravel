@@ -64,14 +64,20 @@ RUN install-php-extensions \
         intl \
         zip
 
-# Pengaturan opcache untuk produksi: kode tidak pernah berubah di dalam kontainer,
-# jadi tidak ada gunanya memeriksa timestamp berkas pada setiap request.
+# Pengaturan PHP untuk produksi.
+#
+# opcache: kode tidak pernah berubah di dalam kontainer, jadi tidak ada gunanya
+# memeriksa timestamp berkas pada setiap request.
+#
+# expose_php: mematikan header X-Powered-By yang mengumumkan versi PHP persis --
+# keterangan yang hanya berguna bagi orang yang mencari kerentanan.
 RUN { \
         echo 'opcache.enable=1'; \
         echo 'opcache.validate_timestamps=0'; \
         echo 'opcache.memory_consumption=128'; \
         echo 'opcache.max_accelerated_files=10000'; \
-    } > "$PHP_INI_DIR/conf.d/opcache.ini" \
+        echo 'expose_php=Off'; \
+    } > "$PHP_INI_DIR/conf.d/taskflow.ini" \
     && mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
 
 # Image FrankenPHP memasang file capability cap_net_bind_service pada binary-nya

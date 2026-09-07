@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\EnsureUserHasRole;
+use App\Http\Middleware\SecurityHeaders;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -14,6 +15,11 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Berlaku untuk seluruh permintaan web, termasuk halaman galat.
+        $middleware->web(append: [
+            SecurityHeaders::class,
+        ]);
+
         $middleware->alias([
             'role' => EnsureUserHasRole::class,
         ]);
@@ -29,12 +35,27 @@ return Application::configure(basePath: dirname(__DIR__))
          *     sehingga login seolah selalu gagal
          *   - $request->ip() mengembalikan alamat load balancer, bukan pengunjung
          *
-         * `at: '*'` mempercayai proxy mana pun. Itu aman pada PaaS karena satu-satunya
-         * jalan masuk ke aplikasi memang lewat load balancer penyedia. Kalau nanti
-         * dipindah ke VPS yang bisa diakses langsung, ganti dengan daftar IP proxy
-         * yang sebenarnya.
+         * Rentang CIDR dipakai, BUKAN '*'. Di Laravel, '*' (dan '**') hanya mempercayai
+         * proxy TERDEKAT. Request di sini melewati beberapa lapis -- Cloudflare, load
+         * balancer Render, lalu kontainer -- sehingga $request->ip() tetap menghasilkan
+         * alamat internal Render (10.x.x.x) yang BERGANTI tiap request.
+         *
+         * Akibatnya tidak kelihatan sampai diuji: HTTPS terdeteksi benar, tapi
+         * pembatasan percobaan login lumpuh total, karena kuncinya berisi email|ip
+         * dan ip-nya berbeda setiap kali.
+         *
+         * Dengan mempercayai seluruh rantai, Symfony mengambil entri paling kiri dari
+         * X-Forwarded-For, yaitu alamat pengunjung sebenarnya.
+         *
+         * Batasnya perlu disadari: entri paling kiri itu bisa dipalsukan pengirim
+         * request. Pembatasan berbasis IP karenanya menahan percobaan biasa, bukan
+         * penyerang yang sengaja mengganti-ganti header. Kalau nanti dipindah ke VPS
+         * yang bisa diakses langsung, ganti dengan daftar IP proxy yang sebenarnya.
          */
-        $middleware->trustProxies(at: '*');
+        $middleware->trustProxies(at: [
+            '0.0.0.0/0',
+            '2000::/3',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         /*
